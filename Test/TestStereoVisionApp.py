@@ -21,7 +21,6 @@
 # System imports
 import sys
 import os
-import imp
 
 # Setup paths for PI use
 sys.path.append('/usr/local/lib/python3.7/dist-packages')

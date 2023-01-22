@@ -21,7 +21,6 @@
 
 #System imports
 import sys
-import imp
 
 #Setup paths
 sys.path.append('/home/pi/.local/lib/python3.5/site-packages')

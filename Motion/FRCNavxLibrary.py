@@ -19,7 +19,7 @@
 
 # System imports
 import sys
-import imp
+import importlib as imp
 
 # Setup paths
 sys.path.append('/usr/local/lib/vmxpi/')

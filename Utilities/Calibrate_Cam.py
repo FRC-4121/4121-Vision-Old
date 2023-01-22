@@ -20,7 +20,6 @@
 # System imports
 import sys
 import os
-import imp
 
 # Module imports
 import cv2 as cv

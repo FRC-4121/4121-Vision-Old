@@ -21,7 +21,6 @@
 # System imports
 import sys
 import os
-import imp
 import time
 
 #Setup paths

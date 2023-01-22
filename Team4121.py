@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #----------------------------------------------------------------------------------------------#
 #                               North Canton Hoover High School                                #
 #                                                                                              #
@@ -36,11 +37,8 @@
 #                                                                                              #
 #----------------------------------------------------------------------------------------------#
 
-#!/usr/bin/env python3
-
 #System imports
 import sys
-import imp
 
 #Setup paths
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
@@ -70,8 +68,8 @@ from FRCNavxLibrary import FRCNavx
 logging.basicConfig(level=logging.DEBUG)
 
 #Declare global variables
-cameraFile = '/home/pi/Team4121/Config/2022CameraSettings.txt'
-visionFile = '/home/pi/Team4121/Config/2022VisionSettings.txt'
+cameraFile = '/home/pi/Team4121/Config/2023CameraSettings.txt'
+visionFile = '/home/pi/Team4121/Config/2023VisionSettings.txt'
 videoDirectory = '/home/pi/Team4121/Videos'
 cameraValues={}
 
@@ -262,9 +260,9 @@ def main():
         fieldCamFilename = videoDirectory + "/FieldCam_001.avi"
         fieldCamera = FRCWebCam('/dev/v4l/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.1:1.0-video-index0', 
                                 'FieldCam',
-                                 fieldCamSettings)
-                                 #'FieldCam01',
-                                 #fieldCamFilename)
+                                 fieldCamSettings,
+                                 'FieldCam01',
+                                 fieldCamFilename)
         
         fieldCamWidth = int(cameraValues['FieldCamWidth'])
         fieldCamHeight = int(cameraValues['FieldCamHeight'])
@@ -282,9 +280,9 @@ def main():
         goalCamFilename = videoDirectory + "/GoalCam_001.avi"
         goalCamera = FRCWebCam('/dev/v4l/by-path/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.2:1.0-video-index0', 
                                'GoalCam', 
-                               goalCamSettings)
-                               #'GoalCam01',
-                               #goalCamFilename)
+                               goalCamSettings,
+                               'GoalCam01',
+                               goalCamFilename)
         
         goalCamWidth = int(cameraValues['GoalCamWidth'])
         goalCamHeight = int(cameraValues['GoalCamHeight'])
