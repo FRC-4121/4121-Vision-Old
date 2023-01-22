@@ -78,10 +78,18 @@ useNavx = True
 videoTesting = True
 resizeVideo = False
 saveVideo = False
-navxTesting = 50 # 0 to disable
+navxTesting = 0 # 0 to disable
 
+# Round all elements in a tuple, returning the formatted string
+# tup is the tuple, p is the number of decimal places, and n is the number of digits in the number (to the left of the decimal)
 def round_tuple(tup, p, n = 1):
     return '(' + ', '.join((("{:" + str(p + n + 2) + "." + str(p) + "f}").format(v) for v in tup)) + ')'
+
+# Puts an iterable value to the network table
+# Elements are added as name.0, name.1, name.2, ...
+def put_iterable(table, name, tup):
+    for (elem, count) in tup.zip(range(len(tup))):
+        table.putNumber(name + "." + str(count), elem)
 
 #Define main processing function
 def main():
@@ -153,6 +161,11 @@ def main():
         #Put gyro value in NetworkTables
         if networkTablesConnected:
             navxTable.putNumber("GyroAngle", gyroAngle)
+            put_iterable(navxTable, "Orientation", navx.read_orientation())
+            put_iterable(navxTable, "Acceleration", navx.read_acceleration())
+            put_iterable(navxTable, "Velocity", navx.read_velocity())
+            put_iterable(navxTable, "Position", navx.read_position())
+
         if navxTesting:
             loopCount += 1
             if loopCount + 1 == navxTesting:
