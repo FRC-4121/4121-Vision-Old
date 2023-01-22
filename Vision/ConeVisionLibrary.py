@@ -7,20 +7,18 @@ class ConeVisionLibrary(VisionBase):
 
 
     # Define class initialization
-    def __init__(self, visionfile):
-        
-        #Read in vision settings file
-        super(visionfile, {"CONES": ConeVisionLibrary.cone_values})
+    def __init__(self):
+        pass
 
     # Locates the cubes and cones in the game (2023)
     # returns a tuple containing (cubes, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
         
         # Read HSV values from dictionary and make tuples
-        coneHSVMin = (int(self.cone_values['HMIN']), int(self.cone_values['SMIN']), int(self.cone_values['VMIN']))
-        coneHSVMax = (int(self.cone_values['HMAX']), int(self.cone_values['SMAX']), int(self.cone_values['VMAX']))
-        coneMinRadius = self.cone_values['MINRADIUS']
-        coneRadius    = self.cone_values['RADIUS']
+        coneHSVMin = (int(VisionBase.config["CONES"]['HMIN']), int(VisionBase.config["CONES"]['SMIN']), int(VisionBase.config["CONES"]['VMIN']))
+        coneHSVMax = (int(VisionBase.config["CONES"]['HMAX']), int(VisionBase.config["CONES"]['SMAX']), int(VisionBase.config["CONES"]['VMAX']))
+        coneMinRadius = VisionBase.config["CONES"]['MINRADIUS']
+        coneRadius    = VisionBase.config["CONES"]['RADIUS']
         
         # Initialize variables (Cone)
         conesFound = 0

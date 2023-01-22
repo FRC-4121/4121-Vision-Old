@@ -2,15 +2,9 @@ from FRCVisionBase import VisionBase, math, cv, np
 
 class BlackTapeRectVisionLibrary(VisionBase):
 
-    # Define class fields
-    tape_values = {}
-
-
     # Define class initialization
-    def __init__(self, visionfile, cameraFocalLength, cameraMountHeight):
+    def __init__(self, cameraFocalLength, cameraMountHeight):
         
-        #Read in vision settings file
-        super(visionfile, {"TAPE": BlackTapeRectVisionLibrary.tape_values})
         self.cameraFocalLength = cameraFocalLength
         self.cameraMountHeight = cameraMountHeight
 
@@ -19,12 +13,12 @@ class BlackTapeRectVisionLibrary(VisionBase):
     def find_objects(self, imgRaw, imageWidth, imageHeight, cameraFOV):
         
         # Read HSV values from dictionary and make tupples
-        hMin = int(self.tape_values['HMIN'])
-        hMax = int(self.tape_values['HMAX'])
-        sMin = int(self.tape_values['SMIN'])
-        sMax = int(self.tape_values['SMAX'])
-        vMin = int(self.tape_values['VMIN'])
-        vMax = int(self.tape_values['VMAX'])
+        hMin = int(VisionBase.config["TAPE"]['HMIN'])
+        hMax = int(VisionBase.config["TAPE"]['HMAX'])
+        sMin = int(VisionBase.config["TAPE"]['SMIN'])
+        sMax = int(VisionBase.config["TAPE"]['SMAX'])
+        vMin = int(VisionBase.config["TAPE"]['VMIN'])
+        vMax = int(VisionBase.config["TAPE"]['VMAX'])
         tapeHSVMin = (hMin, sMin, vMin)
         tapeHSVMax = (hMax, sMax, vMax)
 
@@ -72,7 +66,7 @@ class BlackTapeRectVisionLibrary(VisionBase):
             # Find the largest contour and check it against the mininum tape area
             largestContour = max(tapeContours, key=cv.contourArea)
                         
-            if cv.contourArea(largestContour) > int(self.tape_values['MINAREA']):
+            if cv.contourArea(largestContour) > int(VisionBase.config["TAPE"]['MINAREA']):
                 
                 # Find horizontal rectangle
                 targetX, targetY, targetW, targetH = cv.boundingRect(largestContour)
@@ -100,7 +94,7 @@ class BlackTapeRectVisionLibrary(VisionBase):
             if foundTape:
                 
                 # Adjust tape size for robot angle
-                apparentTapeWidth = float(self.tape_values['TAPEWIDTH']) * math.cos(math.radians(botAngle))
+                apparentTapeWidth = float(VisionBase.config["TAPE"]['TAPEWIDTH']) * math.cos(math.radians(botAngle))
                 
                 # Calculate inches per pixel conversion factor
                 inchesPerPixel = apparentTapeWidth / targetW
@@ -114,7 +108,7 @@ class BlackTapeRectVisionLibrary(VisionBase):
                 
                 # Calculate distance to tape
                 straightLineDistance = apparentTapeWidth * self.cameraFocalLength / targetW
-                distanceArg = math.pow(straightLineDistance, 2) - math.pow((float(self.tape_values['GOALHEIGHT']) - self.cameraMountHeight),2)
+                distanceArg = math.pow(straightLineDistance, 2) - math.pow((float(VisionBase.config["TAPE"]['GOALHEIGHT']) - self.cameraMountHeight),2)
                 if (distanceArg > 0):
                     distanceToTape = math.sqrt(distanceArg)
                 distanceToWall = distanceToTape / math.cos(math.radians(botAngle))                
@@ -124,7 +118,7 @@ class BlackTapeRectVisionLibrary(VisionBase):
                 vertAngleToTape = math.degrees(math.atan((vertOffsetInInches / distanceToTape)))
 
                 # Determine if we have target lock
-                if abs(horizOffsetInInches) <= float(self.tape_values['LOCKTOLERANCE']):
+                if abs(horizOffsetInInches) <= float(VisionBase.config["TAPE"]['LOCKTOLERANCE']):
                     targetLock = True
 
 

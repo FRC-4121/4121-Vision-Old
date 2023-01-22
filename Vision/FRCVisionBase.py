@@ -23,26 +23,24 @@ import math
 class VisionBase:
 
     # Define class fields
-    visionFile = ""
-
+    config = {}
+    init = False
 
     # Class Initialization method
     # Reads the contents of the supplied vision settings file
-    def __init__(self, visionfile, sections):
-
-        #Read in vision settings file
-        self.visionFile = visionfile
-        self.read_vision_file(self.visionFile, sections)
+    def __init__(self):
+        pass
 
 
     # Read vision settings file
-    # Sections is a SECTION: DICT dictionary
-    def read_vision_file(self, file, sections = {}):
-
+    @staticmethod
+    def read_vision_file(file, reload = False):
+        if VisionBase.init and not reload:
+            return True
+        VisionBase.init = True
         # Declare local variables
         value_section = ''
         new_section = False
-        section = {}
         # Open the file and read contents
         try:
             
@@ -63,7 +61,7 @@ class VisionBase:
 
                 # Determine section of the file we are in
                 upper_line = split_line[0].upper()
-                if upper_line[-1] == ':' and upper_line[:-1] in sections:
+                if upper_line[-1] == ':':
                     value_section = upper_line[-1]
                     new_section = True
                 elif split_line[0] == '':
@@ -74,7 +72,7 @@ class VisionBase:
 
                 # Take action based on section
                 if not new_section:
-                    sections[value_section][split_line[0].upper()] = split_line[1]
+                    VisionBase.config[value_section][split_line[0].upper()] = split_line[1]
         
         except FileNotFoundError:
             return False

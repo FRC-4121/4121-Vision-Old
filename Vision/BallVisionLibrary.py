@@ -2,24 +2,15 @@ from FRCVisionBase import VisionBase, math, cv
 
 class BallVisionLibrary(VisionBase):
 
-    # Define class fields
-    ball_values = []
-
-
     # Define class initialization
-    def __init__(self, visionfile, color):
-        # Extend ball_values
-        if color >= BallVisionLibrary.ball_values:
-            BallVisionLibrary.ball_values.extend([{}] * (color - len(BallVisionLibrary.ball_values) + 1))
-        #Read in vision settings file
-        super(visionfile, {"BALL" + BallVisionLibrary.ball_values[color]: self.cube_values})
+    def __init__(self, color):
         self.color = color
 
     # Locates the cubes and cones in the game (2023)
     # returns a tuple containing (cubes, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
         
-        config = self.ball_values[self.color]
+        config = VisionBase.config["BALL" + str(self.color)]
 
         # Define variables
         hMin = config["HMIN"]

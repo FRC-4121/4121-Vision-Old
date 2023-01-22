@@ -7,10 +7,8 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
 
 
     # Define class initialization
-    def __init__(self, visionfile, cameraFocalLength, cameraMountHeight):
+    def __init__(self, cameraFocalLength, cameraMountHeight):
         
-        #Read in vision settings file
-        super(visionfile, {"TAPE": FourVisionTapeRectVisionLibrary.tape_values})
         self.cameraFocalLength = cameraFocalLength
         self.cameraMountHeight = cameraMountHeight
 
@@ -19,12 +17,12 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
     def find_objects(self, imgRaw, imageWidth, imageHeight, cameraFOV):
         
         # Read HSV values from dictionary and make tupples
-        hMin = int(self.tape_values['HMIN'])
-        hMax = int(self.tape_values['HMAX'])
-        sMin = int(self.tape_values['SMIN'])
-        sMax = int(self.tape_values['SMAX'])
-        vMin = int(self.tape_values['VMIN'])
-        vMax = int(self.tape_values['VMAX'])
+        hMin = int(VisionBase.config["TAPE"]['HMIN'])
+        hMax = int(VisionBase.config["TAPE"]['HMAX'])
+        sMin = int(VisionBase.config["TAPE"]['SMIN'])
+        sMax = int(VisionBase.config["TAPE"]['SMAX'])
+        vMin = int(VisionBase.config["TAPE"]['VMIN'])
+        vMax = int(VisionBase.config["TAPE"]['VMAX'])
         tapeHSVMin = (hMin, sMin, vMin)
         tapeHSVMax = (hMax, sMax, vMax)
 
@@ -72,7 +70,7 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
                 # Find horizontal rectangle
                 rectX, rectY, rectW, rectH = cv.boundingRect(contour) 
 
-                if (rectW * rectH) > int(self.tape_values['MINAREA']):
+                if (rectW * rectH) > int(VisionBase.config["TAPE"]['MINAREA']):
                     
                     # Find offset of rectangle from center of image
                     rectOffset = abs((rectX + rectW/2) - imageWidth / 2) #from parameter
@@ -119,7 +117,7 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
             if foundTape:
                                 
                 # Calculate inches per pixel conversion factor
-                inchesPerPixel = float(self.tape_values['TAPEWIDTH']) / targetW
+                inchesPerPixel = float(VisionBase.config["TAPE"]['TAPEWIDTH']) / targetW
 
                 # Find tape offsets
                 horizOffsetPixels = (targetX + targetW/2) - imageWidth / 2 #from parameter
@@ -129,8 +127,8 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
                 centerOffset = -horizOffsetInInches
                 
                 # Calculate distance to tape
-                straightLineDistance = float(self.tape_values['TAPEWIDTH']) * self.cameraFocalLength / targetW
-                distanceArg = math.pow(straightLineDistance, 2) - math.pow((float(self.tape_values['GOALHEIGHT']) - self.cameraMountHeight),2)
+                straightLineDistance = float(VisionBase.config["TAPE"]['TAPEWIDTH']) * self.cameraFocalLength / targetW
+                distanceArg = math.pow(straightLineDistance, 2) - math.pow((float(VisionBase.config["TAPE"]['GOALHEIGHT']) - self.cameraMountHeight),2)
                 if (distanceArg > 0):
                     distanceToTape = math.sqrt(distanceArg)
                 else:
@@ -142,7 +140,7 @@ class FourVisionTapeRectVisionLibrary(VisionBase):
                 vertAngleToTape = math.degrees(math.atan((vertOffsetInInches / distanceToTape)))
 
                 # Determine if we have target lock
-                if abs(horizOffsetInInches) <= float(self.tape_values['LOCKTOLERANCE']):
+                if abs(horizOffsetInInches) <= float(VisionBase.config["TAPE"]['LOCKTOLERANCE']):
                     targetLock = True
 
 

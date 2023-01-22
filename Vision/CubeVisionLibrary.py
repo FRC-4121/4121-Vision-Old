@@ -2,25 +2,19 @@ from FRCVisionBase import VisionBase, math, cv
 
 class CubeVisionLibrary(VisionBase):
 
-    # Define class fields
-    cube_values = {}
-
-
     # Define class initialization
-    def __init__(self, visionfile):
-        
-        #Read in vision settings file
-        super(visionfile, {"CUBES": self.cube_values})
+    def __init__(self):
+        pass
 
     # Locates the cubes and cones in the game (2023)
     # returns a tuple containing (cubes, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
         
         # Read HSV values from dictionary and make tuples
-        cubeHSVMin = (int(self.cube_values['HMIN']), int(self.cube_values['SMIN']), int(self.cube_values['VMIN']))
-        cubeHSVMax = (int(self.cube_values['HMAX']), int(self.cube_values['SMAX']), int(self.cube_values['VMAX']))
-        cubeMinRadius = self.cube_values['MINRADIUS']
-        cubeRadius    = self.cube_values['RADIUS']
+        cubeHSVMin = (int(VisionBase.config["CUBES"]['HMIN']), int(VisionBase.config["CUBES"]['SMIN']), int(VisionBase.config["CUBES"]['VMIN']))
+        cubeHSVMax = (int(VisionBase.config["CUBES"]['HMAX']), int(VisionBase.config["CUBES"]['SMAX']), int(VisionBase.config["CUBES"]['VMAX']))
+        cubeMinRadius = VisionBase.config["CUBES"]['MINRADIUS']
+        cubeRadius    = VisionBase.config["CUBES"]['RADIUS']
         
         # Initialize variables (Cube)
         cubesFound = 0
