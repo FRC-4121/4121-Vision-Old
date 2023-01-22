@@ -23,6 +23,7 @@ import importlib as imp
 
 # Setup paths
 sys.path.append('/usr/local/lib/vmxpi/')
+sys.path.append('/home/pi/.local/lib/python3.5/site-packages')
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 
 # Module imports
