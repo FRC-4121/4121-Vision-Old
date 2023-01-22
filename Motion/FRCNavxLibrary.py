@@ -31,6 +31,7 @@ import time
 import datetime
 import logging
 from threading import Thread
+import vmxpi_hal_python as vmxpi
 
 
 # Define the Navx class
@@ -39,8 +40,6 @@ class FRCNavx:
     # Define initialization
     def __init__(self, name):
 
-        # Load VMX module
-        vmxpi = imp.load_source('vmxpi_hal_python', '/usr/local/lib/vmxpi/vmxpi_hal_python.py')
         self.vmx = vmxpi.VMXPi(False, 50)
 
         if self.vmx.IsOpen(): # board is powered, connected, and in a valid state
