@@ -156,7 +156,7 @@ def main():
         if navxTesting:
             loopCount += 1
             if loopCount + 1 == navxTesting:
-                print("angle: {:5.3}\torientation: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_orientation(), 4, 3), round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
+                print("angle: {:7.2f}\torientation: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_orientation(), 2, 3), round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
                 loopCount = 0
 
         #################################
