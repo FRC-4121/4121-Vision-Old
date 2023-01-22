@@ -36,6 +36,8 @@ class VisionLibrary:
     goal_values = {}
     tape_values = {}
     marker_values = {}
+    cube_values = {}
+    cone_values = {}
 
 
     # Define class initialization
@@ -72,20 +74,15 @@ class VisionLibrary:
                 split_line = clean_line.split(',')
 
                 # Determine section of the file we are in
-                if split_line[0].upper() == 'BALL1:':
-                    value_section = 'BALL1'
+                if split_line[0].upper() == 'CUBE:':
+                    value_section = 'CUBE'
                     new_section = True
-                elif split_line[0].upper() == 'BALL2:':
-                    value_section = 'BALL2'
-                    new_section = True
-                elif split_line[0].upper() == 'GOALTARGET:':
-                    value_section = 'GOALTARGET'
+                elif split_line[0].upper() == 'CONE:':
+                    value_section = 'CONE'
                     new_section = True
                 elif split_line[0].upper() == 'VISIONTAPE:':
                     value_section = 'VISIONTAPE'
                     new_section = True
-                elif split_line[0].upper() == 'MARKER:':
-                    value_section = 'MARKER'
                 elif split_line[0] == '':
                     value_section = ''
                     new_section = True
@@ -94,16 +91,12 @@ class VisionLibrary:
 
                 # Take action based on section
                 if new_section == False:
-                    if value_section == 'BALL1':
+                    if value_section == 'CUBE':
                         VisionLibrary.ball1_values[split_line[0].upper()] = split_line[1]
-                    elif value_section == 'BALL2':
+                    elif value_section == 'CONE':
                         VisionLibrary.ball2_values[split_line[0].upper()] = split_line[1]
-                    elif value_section == 'GOALTARGET':
-                        VisionLibrary.goal_values[split_line[0].upper()] = split_line[1]
                     elif value_section == 'VISIONTAPE':
                         VisionLibrary.tape_values[split_line[0].upper()] = split_line[1]
-                    elif value_section == 'MARKER':
-                        VisionLibrary.marker_values[split_line[0].upper()] = split_line[1]
                     else:
                         new_section = True
         
@@ -178,7 +171,7 @@ class VisionLibrary:
 
         # Define variables
         hMin = 0
-        hmax = 0
+        hMax = 0
         sMin = 0
         sMax = 0
         vMin = 0
@@ -276,7 +269,7 @@ class VisionLibrary:
 
         # Define variables
         hMin = 0
-        hmax = 0
+        hMax = 0
         sMin = 0
         sMax = 0
         vMin = 0
@@ -884,3 +877,82 @@ class VisionLibrary:
         tapeRealWorldValues['VertOffset'] = vertOffsetInInches
 
         return tapeCameraValues, tapeRealWorldValues, foundTape, targetLock
+    
+
+    # Locates the cubes and cones in the game (2023)
+    # returns a tuple containing (cubes, cones)
+    def find_game_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
+
+        # Read HSV values from dictionary and make tuples
+        cubeHSVMin = (int(VisionLibrary.cube_values['HMIN']), int(VisionLibrary.cube_values['SMIN']), int(VisionLibrary.cube_values['VMIN']))
+        cubeHSVMax = (int(VisionLibrary.cube_values['HMAX']), int(VisionLibrary.cube_values['SMAX']), int(VisionLibrary.cube_values['VMAX']))
+        coneHSVMin = (int(VisionLibrary.cone_values['HMIN']), int(VisionLibrary.cone_values['SMIN']), int(VisionLibrary.cone_values['VMIN']))
+        coneHSVMax = (int(VisionLibrary.cone_values['HMAX']), int(VisionLibrary.cone_values['SMAX']), int(VisionLibrary.cone_values['VMAX']))
+        cubeMinRadius = VisionLibrary.cube_values['MINRADIUS']
+        cubeRadius    = VisionLibrary.cube_values['RADIUS']
+        coneeMinRadius = VisionLibrary.cone_values['MINRADIUS']
+        coneeRadius    = VisionLibrary.cone_values['RADIUS']
+        
+        # Initialize variables (Cube)
+        cubesFound = 0
+        cubeData = []
+        cubeTolerance = 0.1
+        # Initialize variables (Cone)
+        conesFound = 0
+        coneData = []
+        coneTolerance = 0.1
+
+        
+        # Find contours in the mask and clean up the return style from OpenCV
+        cubeContours = self.process_image_contours(imgRaw, cubeHSVMin, cubeHSVMax, False, True)
+        coneContours = self.process_image_contours(imgRaw, coneHSVMin, coneHSVMax, False, True) # TODO: cache preprocessed image from first processing
+
+        if len(cubeContours) > 0:
+            cubeContours.sort(key=cv.contourArea, reverse=True)
+            for contour in cubeContours:
+                ((x, y), radius) = cv.minEnclosingCircle(contour)
+                
+                if radius > float(cubeMinRadius): # in pixel units
+                    # Calculate ball metrics
+                    inches_per_pixel = float(cubeRadius) / radius # set up a general conversion factor
+                    distanceToTargetPlane = inches_per_pixel * (cameraWidth / (2 * math.tan(math.radians(cameraFOV))))
+                    offsetInInches = inches_per_pixel * (x - cameraWidth / 2)
+                    angleToCube = math.degrees(math.atan((offsetInInches / distanceToTargetPlane)))
+                    distanceToCube = math.cos(math.radians(angleToCube)) * distanceToTargetPlane
+                    screenPercent = math.pi * radius * radius / (cameraWidth * cameraHeight)
+                    cubeOffset = -offsetInInches
+                    
+                    cubeData.append({
+                        'x': x,
+                        'y': y,
+                        'distance': distanceToCube,
+                        'angle': angleToCube,
+                        'offset': cubeOffset,
+                        'percent': screenPercent
+                    })
+        
+        if len(coneContours) > 0:
+            cubeContours.sort(key=cv.contourArea, reverse=True)
+            for contour in coneContours:
+                ((x, y), radius) = cv.minEnclosingCircle(contour)
+                
+                if radius > float(coneMinRadius): # in pixel units
+                    # Calculate ball metrics
+                    inches_per_pixel = float(coneRadius) / radius # set up a general conversion factor
+                    distanceToTargetPlane = inches_per_pixel * (cameraWidth / (2 * math.tan(math.radians(cameraFOV))))
+                    offsetInInches = inches_per_pixel * (x - cameraWidth / 2)
+                    angleToCone = math.degrees(math.atan((offsetInInches / distanceToTargetPlane)))
+                    distanceToCone = math.cos(math.radians(angleToCone)) * distanceToTargetPlane
+                    screenPercent = math.pi * radius * radius / (cameraWidth * cameraHeight)
+                    coneOffset = -offsetInInches
+                    
+                    coneData.append({
+                        'x': x,
+                        'y': y,
+                        'distance': distanceToCone,
+                        'angle': angleToCone,
+                        'offset': coneOffset,
+                        'percent': screenPercent
+                    })
+        return (cubeData, coneData)
+        
