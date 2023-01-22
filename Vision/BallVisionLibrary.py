@@ -1,6 +1,6 @@
-from FRCVisionBase import VisionBase, math, cv
+from FRCVisionBase import *
 
-class BallVisionLibrary(VisionBase):
+class BallOnlyVisionLibrary(VisionBase):
 
     # Define class initialization
     def __init__(self, color):
@@ -28,7 +28,6 @@ class BallVisionLibrary(VisionBase):
         angleToBall = 0 #degrees
         ballOffset = 0
         screenPercent = 0
-        ballsFound = 0
         ballData = []
 
         # Find contours in the mask and clean up the return style from OpenCV
@@ -63,44 +62,34 @@ class BallVisionLibrary(VisionBase):
                     ballOffset = -offsetInInches
 
                     #Add dictionary to return list
-                    ballData.append({
-                        "x": x,
-                        "y": y,
-                        "radius": radius,
-                        "distance": distanceToBall,
-                        "angle": angleToBall,
-                        "offset": ballOffset,
-                        "percent": screenPercent
-                    })
-
-                    #Increment ball count
-                    ballsFound += 1
+                    ballData.append(FoundObject("BALL", x, y,
+                        radius=radius,
+                        distance=distanceToBall,
+                        angle=angleToBall,
+                        offset=ballOffset,
+                        percent=screenPercent
+                    ))
         
                 else:
                     #No more contours meet criteria so break loop
                     break
 
-        return ballsFound, ballData
+        return ballData
 
-class BallVisionOnlyLibrary(VisionBase):
+class BallVisionLibrary(VisionBase):
 
     # Define class fields
     ball_values = []
 
 
     # Define class initialization
-    def __init__(self, visionfile, color):
-        # Extend ball_values
-        if color >= BallVisionLibrary.ball_values:
-            BallVisionLibrary.ball_values.extend([{}] * (color - len(BallVisionLibrary.ball_values) + 1))
-        #Read in vision settings file
-        super(visionfile, {"BALL" + BallVisionLibrary.ball_values[color]: self.cube_values})
+    def __init__(self, color):
         self.color = color
 
     # Locates the cubes and cones in the game (2023)
     # returns a tuple containing (cubes, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
-        config = self.ball_values[self.color]
+        config = VisionBase.config["BALL{}".format(self.color)]
 
         # Define variables
         hMin = config["HMIN"]
@@ -161,22 +150,17 @@ class BallVisionOnlyLibrary(VisionBase):
                         ballOffset = -offsetInInches
 
                         #Add dictionary to return list
-                        ballData.append({
-                            "x": x,
-                            "y": y,
-                            "radius": radius,
-                            "distance": distanceToBall,
-                            "angle": angleToBall,
-                            "offset": ballOffset,
-                            "percent": screenPercent
-                        })
-
-                        #Increment ball count
-                        ballsFound += 1
+                        ballData.append(FoundObject("BALL", x, y,
+                            radius=radius,
+                            distance=distanceToBall,
+                            angle=angleToBall,
+                            offset=ballOffset,
+                            percent=screenPercent
+                        ))
             
                     else:
                         #No more contours meet criteria so break loop
                         break
 
-        return ballsFound, ballData
+        return ballData
 

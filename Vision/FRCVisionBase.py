@@ -19,6 +19,40 @@ import cv2 as cv
 import numpy as np 
 import math
 
+
+
+class FoundObject:
+
+    # initialize FoundObject, with unused fields defaulting to None
+    # ty, x, and y are mandatory
+    # all other parameters must be named
+    def __init__(self, ty, x, y, *, radius = None, distance = None, angle = None, offset = None, percent = None):
+        self.ty = ty
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.distance = distance
+        self.angle = angle
+        self.offset = offset
+        self.percent = percent
+
+    # pretty printing
+    def __str__(self):
+        out = "found {}".format(self.ty)
+        out += "\n    location: ({}, {})".format(self.x, self.y)
+        if self.radius is not None:
+            out += "\n    radius: {}".format(self.radius)
+        if self.distance is not None:
+            out += "\n    distance: {}".format(self.distance)
+        if self.angle is not None:
+            out += "\n    angle: {}".format(self.angle)
+        if self.offset is not None:
+            out += "\n    offset: {}".format(self.offset)
+        if self.percent is not None:
+            out += "\n    % of screen: {}".format(self.percent)
+        return out
+
+
 # Define the class
 class VisionBase:
 

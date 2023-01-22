@@ -1,4 +1,4 @@
-from FRCVisionBase import VisionBase, math, cv
+from FRCVisionBase import *
 
 class CubeVisionLibrary(VisionBase):
 
@@ -40,13 +40,11 @@ class CubeVisionLibrary(VisionBase):
                     screenPercent = math.pi * radius * radius / (cameraWidth * cameraHeight)
                     cubeOffset = -offsetInInches
                     
-                    cubeData.append({
-                        'x': x,
-                        'y': y,
-                        'distance': distanceToCube,
-                        'angle': angleToCube,
-                        'offset': cubeOffset,
-                        'percent': screenPercent
-                    })
+                    cubeData.append(FoundObject("CUBE", x, y,
+                        distance=distanceToCube,
+                        angle=angleToCube,
+                        offset=cubeOffset,
+                        percent=screenPercent
+                    ))
         
         return cubeData

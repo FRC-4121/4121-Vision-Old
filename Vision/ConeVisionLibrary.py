@@ -1,4 +1,4 @@
-from FRCVisionBase import VisionBase, math, cv
+from FRCVisionBase import *
 
 class ConeVisionLibrary(VisionBase):
 
@@ -44,12 +44,10 @@ class ConeVisionLibrary(VisionBase):
                     screenPercent = math.pi * radius * radius / (cameraWidth * cameraHeight)
                     coneOffset = -offsetInInches
                     
-                    coneData.append({
-                        'x': x,
-                        'y': y,
-                        'distance': distanceToCone,
-                        'angle': angleToCone,
-                        'offset': coneOffset,
-                        'percent': screenPercent
-                    })
+                    coneData.append(FoundObject("CONE", x, y,
+                        distance=distanceToCone,
+                        angle=angleToCone,
+                        offset=coneOffset,
+                        percent=screenPercent
+                    ))
         return coneData
