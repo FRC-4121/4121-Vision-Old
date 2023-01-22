@@ -60,7 +60,6 @@ from networktables import NetworkTables
 from time import sleep
 
 #Team 4121 module imports
-from FRCVisionLibrary import VisionLibrary
 from FRCCameraLibrary import FRCWebCam
 from FRCNavxLibrary import FRCNavx
 
