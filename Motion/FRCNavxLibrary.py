@@ -52,7 +52,7 @@ class FRCNavx:
             timeString = str(currentTime.tm_year) + str(currentTime.tm_mon) + str(currentTime.tm_mday) + str(currentTime.tm_hour) + str(currentTime.tm_min)
 
             # Open a log file
-            logFilename = '/data/Logs/Navx_Log_' + timeString + '.txt'
+            logFilename = '/home/pi/Team4121/Logs/Navx_Log_' + timeString + '.txt'
             self.log_file = open(logFilename, 'w')
             self.log_file.write('Navx initialized on %s.\n' % datetime.datetime.now())
             self.log_file.write('')
