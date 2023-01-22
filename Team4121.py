@@ -162,6 +162,8 @@ def main():
     FRCWebCam.read_config_file(cameraFile)
     fieldCam = FRCWebCam('FIELD', timeString)
         
+    #Create a blank array to hold the camera image
+    frame = np.zeros((int(fieldCam.width), int(fieldCam.height), 3), np.uint8)
 
     #Open a log file
     logFilename = '/home/pi/Team4121/Logs/Run_Log_' + timeString + '.txt'
@@ -223,39 +225,63 @@ def main():
             # Process Web Cam #
             ###################
 
-            cv.imshow("Field", cubeLib.find_with_camera(fieldCam))
+            frame = fieldCam.read_frame()
+            
+            cubes = cubeLib.find_objects(frame, fieldCam.width, fieldCam.height, fieldCam.fov)
+                
+            if len(cubes) >= 1:
 
-            if False:
+                cube = cubes[0]
+                cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 0, 255), 2)
+                cv.putText(frame, "distance: {:.2f}".format(cube.distance), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                cv.putText(frame, "angle: {:.2f}".format(cube.angle), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                cv.putText(frame, "offset: {:.2f}".format(cube.offset), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+                if len(cubes) >= 2:
+                    cube = cubes[1]
+                    cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+
+                    if len(cubes) >= 3:
+                        cube = cubes[2]
+                        cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+
+            cones = coneLib.find_objects(frame, fieldCam.width, fieldCam.height, fieldCam.fov)
                 
-                frame, cubes = cubeLib.find_with_camera(fieldCam)
+            if len(cones) >= 1:
+
+                cone = cones[0]
+                cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 0, 255), 2)
+                cv.putText(frame, "distance: {:.2f}".format(cone.distance), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                cv.putText(frame, "angle: {:.2f}".format(cone.angle), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                cv.putText(frame, "offset: {:.2f}".format(cone.offset), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+                if len(cones) >= 2:
+                    cone = cones[1]
+                    cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
+
+                    if len(cones) >= 3:
+                        cone = cones[2]
+                        cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
+
+            visionLoopCount += 1
+            if visionLoopCount + 1 == visionTesting:
+                #print("found {} cubes".format(len(cubes)))
+                visionLoopCount = 0
                 
+            if networkTablesConnected:
+                visionTable.putNumber("CubesFound", len(cubes))
                 if len(cubes) >= 1:
-
-                    cube = cubes[0]
-                    cv.rectangle(frame, cube.x, cube.y, cube.w, cube.h, (255, 0, 0), 2)
-                    cv.putText(frame, "distance: {:.2f}".format(cube.distance), (10, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                    cv.putText(frame, "angle: {:.2f}".format(cube.angle), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                    cv.putText(frame, "offset: {:.2f}".format(cube.offset), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-                visionLoopCount += 1
-                if visionLoopCount + 1 == visionTesting:
-                    print("found {} cubes".format(len(cubes)))
-                    visionLoopCount = 0
-                
-                if networkTablesConnected:
-                    visionTable.putNumber("CubesFound", len(cubes))
-                    if len(cubes) >= 1:
-                        visionTable.putNumber("Cubes.0.distance", unwrap_or(cubes[0].distance, -9999.))
-                        visionTable.putNumber("Cubes.0.angle", unwrap_or(cubes[0].angle, -9999.))
-                        visionTable.putNumber("Cubes.0.offset", unwrap_or(cubes[0].offset, -9999.))
-                        if len(cubes) >= 2:
-                            visionTable.putNumber("Cubes.1.distance", unwrap_or(cubes[1].distance, -9999.))
-                            visionTable.putNumber("Cubes.1.angle", unwrap_or(cubes[1].angle, -9999.))
-                            visionTable.putNumber("Cubes.1.offset", unwrap_or(cubes[1].offset, -9999.))
-                            if len(cubes) >= 3:
-                                visionTable.putNumber("Cubes.2.distance", unwrap_or(cubes[2].distance, -9999.))
-                                visionTable.putNumber("Cubes.2.angle", unwrap_or(cubes[2].angle, -9999.))
-                                visionTable.putNumber("Cubes.2.offset", unwrap_or(cubes[2].offset, -9999.))
+                    visionTable.putNumber("Cubes.0.distance", unwrap_or(cubes[0].distance, -9999.))
+                    visionTable.putNumber("Cubes.0.angle", unwrap_or(cubes[0].angle, -9999.))
+                    visionTable.putNumber("Cubes.0.offset", unwrap_or(cubes[0].offset, -9999.))
+                    if len(cubes) >= 2:
+                        visionTable.putNumber("Cubes.1.distance", unwrap_or(cubes[1].distance, -9999.))
+                        visionTable.putNumber("Cubes.1.angle", unwrap_or(cubes[1].angle, -9999.))
+                        visionTable.putNumber("Cubes.1.offset", unwrap_or(cubes[1].offset, -9999.))
+                        if len(cubes) >= 3:
+                            visionTable.putNumber("Cubes.2.distance", unwrap_or(cubes[2].distance, -9999.))
+                            visionTable.putNumber("Cubes.2.angle", unwrap_or(cubes[2].angle, -9999.))
+                            visionTable.putNumber("Cubes.2.offset", unwrap_or(cubes[2].offset, -9999.))
 
                 if videoTesting:
                     cv.imshow("Field", frame)

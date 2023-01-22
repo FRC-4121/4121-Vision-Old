@@ -1,5 +1,7 @@
 from FRCVisionBase import *
 
+mul_abs = lambda x: 1/x if x < 1 else x
+
 class ConeVisionLibrary(VisionBase):
 
     # Define class fields
@@ -10,44 +12,56 @@ class ConeVisionLibrary(VisionBase):
     def __init__(self):
         pass
 
-    # Locates the cubes and cones in the game (2023)
-    # returns a tuple containing (cubes, cones)
+    # Locates the cones and cones in the game (2023)
+    # returns a tuple containing (cones, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
         
-        # Read HSV values from dictionary and make tuples
-        coneHSVMin = (int(VisionBase.config["CONE"]['HMIN']), int(VisionBase.config["CONE"]['SMIN']), int(VisionBase.config["CONE"]['VMIN']))
-        coneHSVMax = (int(VisionBase.config["CONE"]['HMAX']), int(VisionBase.config["CONE"]['SMAX']), int(VisionBase.config["CONE"]['VMAX']))
-        coneMinRadius = VisionBase.config["CONE"]['MINRADIUS']
-        coneRadius    = VisionBase.config["CONE"]['RADIUS']
+        config = VisionBase.config["CONE"]
+        # Read configuration values from dictionary and make tuples
+        HSVMin    = (int(config['HMIN']), int(config['SMIN']), int(config['VMIN']))
+        HSVMax    = (int(config['HMAX']), int(config['SMAX']), int(config['VMAX']))
+        minArea   = float(config['MINAREA'])
+        tolerance = float(config['TOLERANCE'])
+        minVis    = float(config['MINVIS'])
+        width     = float(config['WIDTH'])
+        height    = float(config['HEIGHT'])
+        aspect    = height / width
         
         # Initialize variables (Cone)
-        conesFound = 0
-        coneData = []
-        coneTolerance = 0.1
+        data = []
+        
 
         
         # Find contours in the mask and clean up the return style from OpenCV
-        coneContours = self.process_image_contours(imgRaw, coneHSVMin, coneHSVMax, False, True)
+        contours = self.process_image_contours(imgRaw, HSVMin, HSVMax, False, False)
+        if len(contours) > 0:
 
-        if len(coneContours) > 0:
-            coneContours.sort(key=cv.contourArea, reverse=True)
-            for contour in coneContours:
-                ((x, y), radius) = cv.minEnclosingCircle(contour)
+            contours.sort(key=cv.contourArea, reverse=True)
+            for contour in contours:
+                x, y, w, h = cv.boundingRect(contour)
                 
-                if radius > float(coneMinRadius): # in pixel units
-                    # Calculate ball metrics
-                    inches_per_pixel = float(coneRadius) / radius # set up a general conversion factor
-                    distanceToTargetPlane = inches_per_pixel * (cameraWidth / (2 * math.tan(math.radians(cameraFOV))))
-                    offsetInInches = inches_per_pixel * (x - cameraWidth / 2)
-                    angleToCone = math.degrees(math.atan((offsetInInches / distanceToTargetPlane)))
-                    distanceToCone = math.cos(math.radians(angleToCone)) * distanceToTargetPlane
-                    screenPercent = math.pi * radius * radius / (cameraWidth * cameraHeight)
-                    coneOffset = -offsetInInches
-                    
-                    coneData.append(FoundObject("CONE", x, y,
-                        distance=distanceToCone,
-                        angle=angleToCone,
-                        offset=coneOffset,
-                        percent=screenPercent
-                    ))
-        return coneData
+                if w * h < minArea: # in pixel units
+                    break
+                
+                if abs(mul_abs(h / w) / aspect - 1.0) > tolerance or cv.contourArea(contour) / (w * h) < minVis:
+                    continue
+
+                # Calculate metrics
+                inches_per_pixel = float(width) / w # set up a general conversion factor
+                distanceToTargetPlane = inches_per_pixel * (cameraWidth / (2 * math.tan(math.radians(cameraFOV))))
+                offsetInInches = inches_per_pixel * ((x + (w / 2)) - (cameraWidth / 2))
+                angleToObject = -1 * math.degrees(math.atan((offsetInInches / distanceToTargetPlane)))
+                distanceToObject = math.cos(math.radians(angleToObject)) * distanceToTargetPlane
+                screenPercent = w * h / (cameraWidth * cameraHeight)
+                offset = -offsetInInches
+                
+                data.append(FoundObject("CUBE", x, y,
+                    w=w,
+                    h=h,
+                    distance=distanceToObject,
+                    angle=angleToObject,
+                    offset=offset,
+                    percent=screenPercent
+                ))
+        
+        return data
