@@ -111,16 +111,16 @@ class FRCNavx:
     # What could this possibly do?
     def read_acceleration(self):
         ahrs = self.vmx.getAHRS()
-        (ahrs.GetWorldLinearAccelX(), ahrs.GetWorldLinearAccelY(), ahrs.GetWorldLinearAccelZ())
+        return (round(ahrs.GetWorldLinearAccelX(), 4), round(ahrs.GetWorldLinearAccelY(), 4), round(ahrs.GetWorldLinearAccelZ(), 4))
 
     # What could this possibly do?
     def read_velocity(self):
         ahrs = self.vmx.getAHRS()
-        (ahrs.GetVelocityX(), ahrs.GetVelocityY(), ahrs.GetVelocityZ())
+        return (round(ahrs.GetVelocityX(), 4), round(ahrs.GetVelocityY(), 4), round(ahrs.GetVelocityZ(), 4))    
     
     def read_position(self):
         ahrs = self.vmx.getAHRS()
-        (ahrs.GetDisplacementX(), ahrs.GetDisplacementY(), ahrs.GetDisplacementZ())
+        return (round(ahrs.GetDisplacementX(), 4), round(ahrs.GetDisplacementY(), 4), round(ahrs.GetDisplacementZ(), 4))
     
 
     # Define read time method
