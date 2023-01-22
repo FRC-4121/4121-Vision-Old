@@ -40,13 +40,19 @@ class FRCNavx:
     def __init__(self, name):
 
         # Load VMX module
-        self.vmxpi = imp.load_source('vmxpi_hal_python', '/usr/local/lib/vmxpi/vmxpi_hal_python.py')
-        self.vmx = self.vmxpi.VMXPi(False,50)
-        self.vmxOpen = self.vmx.IsOpen()
+        vmxpi = imp.load_source('vmxpi_hal_python', '/usr/local/lib/vmxpi/vmxpi_hal_python.py')
+        self.vmx = vmxpi.VMXPi(False, 50)
 
-        # Log error if VMX didn't open properly
-        if self.vmxOpen is False:
-
+        if self.vmx.IsOpen(): # board is powered, connected, and in a valid state
+            # Reset Navx and initialize time
+            self.vmx.getAHRS().Reset()
+            self.vmx.getAHRS().ZeroYaw()
+            self.vmx.getAHRS().ZeroPitch()
+            self.time = self.vmx.getTime().GetRTCTime()
+            self.date = self.vmx.getTime().GetRTCDate()
+            self.poisoned = False
+        else:
+            # Log error if VMX didn't open properly
             # Get current time as a string
             currentTime = time.localtime(time.time())
             timeString = str(currentTime.tm_year) + str(currentTime.tm_mon) + str(currentTime.tm_mday) + str(currentTime.tm_hour) + str(currentTime.tm_min)
@@ -63,6 +69,7 @@ class FRCNavx:
             self.log_file.write('        - Is pigpio (or the system resources it requires) in use by another process?\n')
             self.log_file.write('        - Does this application have root privileges?')
             self.log_file.close()
+            self.poisoned = True
 
         # Set name of Navx thread
         self.name = name
@@ -73,13 +80,6 @@ class FRCNavx:
         self.pitch = 0.0
         self.time = []
         self.date = []
-        
-        # Reset Navx and initialize time
-        if self.vmxOpen is True:
-            self.vmx.getAHRS().Reset()
-            self.vmx.getAHRS().ZeroYaw()
-            self.time = self.vmx.getTime().GetRTCTime()
-            self.date = self.vmx.getTime().GetRTCDate()
        
 
     # Define read angle method

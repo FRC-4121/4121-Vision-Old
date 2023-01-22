@@ -890,8 +890,8 @@ class VisionLibrary:
         coneHSVMax = (int(VisionLibrary.cone_values['HMAX']), int(VisionLibrary.cone_values['SMAX']), int(VisionLibrary.cone_values['VMAX']))
         cubeMinRadius = VisionLibrary.cube_values['MINRADIUS']
         cubeRadius    = VisionLibrary.cube_values['RADIUS']
-        coneeMinRadius = VisionLibrary.cone_values['MINRADIUS']
-        coneeRadius    = VisionLibrary.cone_values['RADIUS']
+        coneMinRadius = VisionLibrary.cone_values['MINRADIUS']
+        coneRadius    = VisionLibrary.cone_values['RADIUS']
         
         # Initialize variables (Cube)
         cubesFound = 0
