@@ -80,6 +80,9 @@ resizeVideo = False
 saveVideo = False
 navxTesting = True
 
+def round_tuple(tup, p):
+    return '(' + ', '.join((("{:." + str(p) + "f}").format(v) for v in tup)) + ')'
+
 #Define main processing function
 def main():
     global useNavx
@@ -151,7 +154,7 @@ def main():
         if networkTablesConnected:
             navxTable.putNumber("GyroAngle", gyroAngle)
         if navxTesting:
-            print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, navx.read_acceleration(), navx.read_velocity(), navx.read_position()))
+            print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
 
         #################################
         # Check for stopping conditions #
