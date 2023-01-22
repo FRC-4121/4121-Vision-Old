@@ -39,14 +39,13 @@ import vmxpi_hal_python as vmxpi
 class FRCNavx:
 
     # Define initialization
-    def __init__(self, name):
+    def __init__(self, name, sleep = True):
 
         self.vmx = vmxpi.VMXPi(False, 50)
 
         if self.vmx.IsOpen(): # board is powered, connected, and in a valid state
             # Reset Navx and initialize time
-            self.vmx.getAHRS().Reset()
-            self.vmx.getAHRS().ZeroYaw()
+            self.reset(sleep)
             self.time = self.vmx.getTime().GetRTCTime()
             self.date = self.vmx.getTime().GetRTCDate()
             self.poisoned = False
@@ -58,16 +57,15 @@ class FRCNavx:
 
             # Open a log file
             logFilename = '/home/pi/Team4121/Logs/Navx_Log_' + timeString + '.txt'
-            self.log_file = open(logFilename, 'w')
-            self.log_file.write('Navx initialized on %s.\n' % datetime.datetime.now())
-            self.log_file.write('')
+            with open(logFilename, 'w') as log_file:
+                log_file.write('Navx initialized on %s.\n' % datetime.datetime.now())
+                log_file.write('')
 
-            # Write error message
-            self.log_file.write('Error:  Unable to open VMX Client.\n')
-            self.log_file.write('\n')
-            self.log_file.write('        - Is pigpio (or the system resources it requires) in use by another process?\n')
-            self.log_file.write('        - Does this application have root privileges?')
-            self.log_file.close()
+                # Write error message
+                log_file.write('Error:  Unable to open VMX Client.\n')
+                log_file.write('\n')
+                log_file.write('        - Is pigpio (or the system resources it requires) in use by another process?\n')
+                log_file.write('        - Does this application have root privileges?')
             self.poisoned = True
 
         # Set name of Navx thread
@@ -78,6 +76,7 @@ class FRCNavx:
         self.yaw = 0.0
         self.pitch = 0.0
         self.roll = 0.0
+        self.pitchOffset = 0.0
         self.time = []
         self.date = []
        
@@ -99,7 +98,7 @@ class FRCNavx:
     # Define read pitch method
     def read_pitch(self):
 
-        self.pitch = round(self.vmx.getAHRS().GetPitch(), 2)
+        self.pitch = round(self.vmx.getAHRS().GetPitch() - self.pitchOffset, 2)
         return self.pitch
 
     # Define read pitch method
@@ -110,10 +109,15 @@ class FRCNavx:
 
 
     # Define reset gyro method
-    def reset_gyro(self):
+    def reset(self, sleep = True):
 
-        self.vmx.Reset()
-        self.vmx.ZeroYaw()
+        if sleep:
+            time.sleep(15)
+        
+        ahrs = self.vmx.getAHRS()
+        ahrs.Reset()
+        ahrs.ZeroYaw()
+        self.pitchOffset = ahrs.getPitch()
 
     def read_orientation(self):
         return (self.read_yaw(), self.read_pitch(), self.read_roll())
