@@ -80,6 +80,8 @@ useVision = False
 videoTesting = False
 resizeVideo = False
 saveVideo = False
+findField = False
+findTape = False
 navxTesting = 0 # 0 to disable
 visionTesting = 0 # 0 to disable
 
@@ -94,6 +96,7 @@ if piname == 'raspberrypi3':
     videoTesting = False
     resizeVideo = False
     saveVideo = False
+    findTape = True
     navxTesting = 0
     visionTesting = 0
 elif piname == 'raspberrypi4':
@@ -102,6 +105,7 @@ elif piname == 'raspberrypi4':
     videoTesting = True
     resizeVideo = False
     saveVideo = False
+    findField = True
     navxTesting = 0
     visionTesting = 50
 else:
@@ -148,22 +152,29 @@ def main():
     navx = None
     visionTable = None
     navxTable = None
+    FRCWebCam.read_config_file(cameraFile)
+    fieldCam = FRCWebCam('FIELD', timeString)
+    tapeCam = FRCWebCam('TAPE', timeString)
 
     VisionBase.read_vision_file(visionFile)
-    cubeLib = CubeVisionLibrary()
-    coneLib = ConeVisionLibrary()
+    cubeLib = None
+    coneLib = None
+    tapeLib = None
+    if findField:
+        cubeLib = CubeVisionLibrary()
+        coneLib = ConeVisionLibrary()
+
+    if findTape:
+        tapeLib = TapeRectVisionLibrary()
 
     #Create Navx object
     if useNavx:
         navx = FRCNavx('NavxStream')
         timeString = navx.get_raw_time()
         useNavx = not navx.poisoned
-    
-    FRCWebCam.read_config_file(cameraFile)
-    fieldCam = FRCWebCam('FIELD', timeString)
         
     #Create a blank array to hold the camera image
-    frame = np.zeros((int(fieldCam.width), int(fieldCam.height), 3), np.uint8)
+    fieldFrame = np.zeros((int(fieldCam.width), int(fieldCam.height), 3), np.uint8)
 
     #Open a log file
     logFilename = '/home/pi/Team4121/Logs/Run_Log_' + timeString + '.txt'
@@ -224,68 +235,150 @@ def main():
             ###################
             # Process Web Cam #
             ###################
+            if findField:
+                fieldFrame = fieldCam.read_frame()
+                
+                cubes = cubeLib.find_objects(fieldFrame, fieldCam.width, fieldCam.height, fieldCam.fov)
+                    
+                if len(cubes) >= 1:
 
-            frame = fieldCam.read_frame()
+                    cube = cubes[0]
+                    cv.rectangle(fieldFrame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 0, 255), 2)
+                    cv.putText(fieldFrame, "D: {:6.2f}".format(cube.distance), (cube.x + 10, cube.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                    cv.putText(fieldFrame, "A: {:6.2f}".format(cube.angle), (cube.x + 10, cube.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                    cv.putText(fieldFrame, "O: {:6.2f}".format(cube.offset), (cube.x + 10, cube.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+
+                    if len(cubes) >= 2:
+                        cube = cubes[1]
+                        cv.rectangle(fieldFrame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+                        cv.putText(fieldFrame, "D: {:6.2f}".format(cube.distance), (cube.x + 10, cube.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                        cv.putText(fieldFrame, "A: {:6.2f}".format(cube.angle), (cube.x + 10, cube.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                        cv.putText(fieldFrame, "O: {:6.2f}".format(cube.offset), (cube.x + 10, cube.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+
+                        if len(cubes) >= 3:
+                            cube = cubes[2]
+                            cv.rectangle(fieldFrame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+                            cv.putText(fieldFrame, "D: {:6.2f}".format(cube.distance), (cube.x + 10, cube.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                            cv.putText(fieldFrame, "A: {:6.2f}".format(cube.angle), (cube.x + 10, cube.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                            cv.putText(fieldFrame, "O: {:6.2f}".format(cube.offset), (cube.x + 10, cube.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+
+                cones = coneLib.find_objects(fieldFrame, fieldCam.width, fieldCam.height, fieldCam.fov)
+                    
+                if len(cones) >= 1:
+
+                    cone = cones[0]
+                    cv.rectangle(fieldFrame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 0, 255), 2)
+                    cv.putText(fieldFrame, "D: {:6.2f}".format(cone.distance), (cone.x + 10, cone.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                    cv.putText(fieldFrame, "A: {:6.2f}".format(cone.angle), (cone.x + 10, cone.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                    cv.putText(fieldFrame, "O: {:6.2f}".format(cone.offset), (cone.x + 10, cone.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+
+                    if len(cones) >= 2:
+                        cone = cones[1]
+                        cv.rectangle(fieldFrame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
+                        cv.putText(fieldFrame, "D: {:6.2f}".format(cone.distance), (cone.x + 10, cone.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                        cv.putText(fieldFrame, "A: {:6.2f}".format(cone.angle), (cone.x + 10, cone.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                        cv.putText(fieldFrame, "O: {:6.2f}".format(cone.offset), (cone.x + 10, cone.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+
+                        if len(cones) >= 3:
+                            cone = cones[2]
+                            cv.rectangle(fieldFrame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
+                            cv.putText(fieldFrame, "D: {:6.2f}".format(cone.distance), (cone.x + 10, cone.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                            cv.putText(fieldFrame, "A: {:6.2f}".format(cone.angle), (cone.x + 10, cone.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                            cv.putText(fieldFrame, "O: {:6.2f}".format(cone.offset), (cone.x + 10, cone.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 0), 2)
+                
+                if videoTesting:
+                    cv.imshow("Field", fieldFrame)
+                
+                if networkTablesConnected:
+                    visionTable.putNumber("CubesFound", len(cubes))
+                    if len(cubes) >= 1:
+                        visionTable.putNumber("Cubes.0.distance", unwrap_or(cubes[0].distance, -9999.))
+                        visionTable.putNumber("Cubes.0.angle", unwrap_or(cubes[0].angle, -9999.))
+                        visionTable.putNumber("Cubes.0.offset", unwrap_or(cubes[0].offset, -9999.))
+                        if len(cubes) >= 2:
+                            visionTable.putNumber("Cubes.1.distance", unwrap_or(cubes[1].distance, -9999.))
+                            visionTable.putNumber("Cubes.1.angle", unwrap_or(cubes[1].angle, -9999.))
+                            visionTable.putNumber("Cubes.1.offset", unwrap_or(cubes[1].offset, -9999.))
+                            if len(cubes) >= 3:
+                                visionTable.putNumber("Cubes.2.distance", unwrap_or(cubes[2].distance, -9999.))
+                                visionTable.putNumber("Cubes.2.angle", unwrap_or(cubes[2].angle, -9999.))
+                                visionTable.putNumber("Cubes.2.offset", unwrap_or(cubes[2].offset, -9999.))
+                    
+                    visionTable.putNumber("ConesFound", len(cones))
+                    if len(cones) >= 1:
+                        visionTable.putNumber("Cones.0.distance", unwrap_or(cones[0].distance, -9999.))
+                        visionTable.putNumber("Cones.0.angle", unwrap_or(cones[0].angle, -9999.))
+                        visionTable.putNumber("Cones.0.offset", unwrap_or(cones[0].offset, -9999.))
+                        if len(cones) >= 2:
+                            visionTable.putNumber("Cones.1.distance", unwrap_or(cones[1].distance, -9999.))
+                            visionTable.putNumber("Cones.1.angle", unwrap_or(cones[1].angle, -9999.))
+                            visionTable.putNumber("Cones.1.offset", unwrap_or(cones[1].offset, -9999.))
+                            if len(cones) >= 3:
+                                visionTable.putNumber("Cones.2.distance", unwrap_or(cones[2].distance, -9999.))
+                                visionTable.putNumber("Cones.2.angle", unwrap_or(cones[2].angle, -9999.))
+                                visionTable.putNumber("Cones.2.offset", unwrap_or(cones[2].offset, -9999.))
             
-            cubes = cubeLib.find_objects(frame, fieldCam.width, fieldCam.height, fieldCam.fov)
+            if findTape:
+                tapeFrame = tapeCam.read_frame()
+
+                tapes = tapeLib.find_objects(tapeFrame, tapeCam.width, tapeCam.height, tapeCam.fov)
                 
-            if len(cubes) >= 1:
+                if len(tapes) >= 1:
 
-                cube = cubes[0]
-                cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 0, 255), 2)
-                cv.putText(frame, "distance: {:.2f}".format(cube.distance), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-                cv.putText(frame, "angle: {:.2f}".format(cube.angle), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-                cv.putText(frame, "offset: {:.2f}".format(cube.offset), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                    tape = tapes[0]
+                    cv.rectangle(tapeFrame, (tape.x, tape.y), ((tape.x + tape.w), (tape.y + tape.h)), (0, 0, 255), 2)
+                    cv.putText(tapeFrame, "D: {:6.2f}".format(tape.distance), (tape.x + tape.w + 10, tape.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    cv.putText(tapeFrame, "A: {:6.2f}".format(tape.angle), (tape.x + tape.w + 10, tape.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    cv.putText(tapeFrame, "O: {:6.2f}".format(tape.offset), (tape.x + tape.w + 10, tape.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-                if len(cubes) >= 2:
-                    cube = cubes[1]
-                    cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+                    if len(tapes) >= 2:
+                        tape = tapes[1]
+                        cv.rectangle(tapeFrame, (tape.x, tape.y), ((tape.x + tape.w), (tape.y + tape.h)), (0, 255, 0), 2)
+                        cv.putText(tapeFrame, "D: {:6.2f}".format(tape.distance), (tape.x + tape.w + 10, tape.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        cv.putText(tapeFrame, "A: {:6.2f}".format(tape.angle), (tape.x + tape.w + 10, tape.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                        cv.putText(tapeFrame, "O: {:6.2f}".format(tape.offset), (tape.x + tape.w + 10, tape.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-                    if len(cubes) >= 3:
-                        cube = cubes[2]
-                        cv.rectangle(frame, (cube.x, cube.y), ((cube.x + cube.w), (cube.y + cube.h)), (0, 255, 0), 2)
+                        if len(tapes) >= 3:
+                            tape = tapes[2]
+                            cv.rectangle(tapeFrame, (tape.x, tape.y), ((tape.x + tape.w), (tape.y + tape.h)), (0, 255, 0), 2)
+                            cv.putText(tapeFrame, "D: {:6.2f}".format(tape.distance), (tape.x + tape.w + 10, tape.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            cv.putText(tapeFrame, "A: {:6.2f}".format(tape.angle), (tape.x + tape.w + 10, tape.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                            cv.putText(tapeFrame, "O: {:6.2f}".format(tape.offset), (tape.x + tape.w + 10, tape.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-            cones = coneLib.find_objects(frame, fieldCam.width, fieldCam.height, fieldCam.fov)
+                            if len(tapes) >= 4:
+                                tape = tapes[3]
+                                cv.rectangle(tapeFrame, (tape.x, tape.y), ((tape.x + tape.w), (tape.y + tape.h)), (0, 255, 0), 2)
+                                cv.putText(tapeFrame, "D: {:6.2f}".format(tape.distance), (tape.x + tape.w + 10, tape.y + 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                                cv.putText(tapeFrame, "A: {:6.2f}".format(tape.angle), (tape.x + tape.w + 10, tape.y + 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                                cv.putText(tapeFrame, "O: {:6.2f}".format(tape.offset), (tape.x + tape.w + 10, tape.y + 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 
-            if len(cones) >= 1:
-
-                cone = cones[0]
-                cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 0, 255), 2)
-                cv.putText(frame, "distance: {:.2f}".format(cone.distance), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-                cv.putText(frame, "angle: {:.2f}".format(cone.angle), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-                cv.putText(frame, "offset: {:.2f}".format(cone.offset), (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-
-                if len(cones) >= 2:
-                    cone = cones[1]
-                    cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
-
-                    if len(cones) >= 3:
-                        cone = cones[2]
-                        cv.rectangle(frame, (cone.x, cone.y), ((cone.x + cone.w), (cone.y + cone.h)), (0, 255, 0), 2)
-
+                if videoTesting:
+                    cv.imshow("Tapes", tapeFrame)
+                
+                if networkTablesConnected:
+                    visionTable.putNumber("TapesFound", len(tapes))
+                    if len(tapes) >= 1:
+                        visionTable.putNumber("Tapes.0.distance", unwrap_or(tapes[0].distance, -9999.))
+                        visionTable.putNumber("Tapes.0.angle", unwrap_or(tapes[0].angle, -9999.))
+                        visionTable.putNumber("Tapes.0.offset", unwrap_or(tapes[0].offset, -9999.))
+                        if len(tapes) >= 2:
+                            visionTable.putNumber("Tapes.1.distance", unwrap_or(tapes[1].distance, -9999.))
+                            visionTable.putNumber("Tapes.1.angle", unwrap_or(tapes[1].angle, -9999.))
+                            visionTable.putNumber("Tapes.1.offset", unwrap_or(tapes[1].offset, -9999.))
+                            if len(tapes) >= 3:
+                                visionTable.putNumber("Tapes.2.distance", unwrap_or(tapes[2].distance, -9999.))
+                                visionTable.putNumber("Tapes.2.angle", unwrap_or(tapes[2].angle, -9999.))
+                                visionTable.putNumber("Tapes.2.offset", unwrap_or(tapes[2].offset, -9999.))
+                                if len(tapes) >= 4:
+                                    visionTable.putNumber("Tapes.3.distance", unwrap_or(tapes[3].distance, -9999.))
+                                    visionTable.putNumber("Tapes.3.angle", unwrap_or(tapes[3].angle, -9999.))
+                                    visionTable.putNumber("Tapes.3.offset", unwrap_or(tapes[3].offset, -9999.))
+            
             visionLoopCount += 1
             if visionLoopCount + 1 == visionTesting:
                 #print("found {} cubes".format(len(cubes)))
                 visionLoopCount = 0
                 
-            if networkTablesConnected:
-                visionTable.putNumber("CubesFound", len(cubes))
-                if len(cubes) >= 1:
-                    visionTable.putNumber("Cubes.0.distance", unwrap_or(cubes[0].distance, -9999.))
-                    visionTable.putNumber("Cubes.0.angle", unwrap_or(cubes[0].angle, -9999.))
-                    visionTable.putNumber("Cubes.0.offset", unwrap_or(cubes[0].offset, -9999.))
-                    if len(cubes) >= 2:
-                        visionTable.putNumber("Cubes.1.distance", unwrap_or(cubes[1].distance, -9999.))
-                        visionTable.putNumber("Cubes.1.angle", unwrap_or(cubes[1].angle, -9999.))
-                        visionTable.putNumber("Cubes.1.offset", unwrap_or(cubes[1].offset, -9999.))
-                        if len(cubes) >= 3:
-                            visionTable.putNumber("Cubes.2.distance", unwrap_or(cubes[2].distance, -9999.))
-                            visionTable.putNumber("Cubes.2.angle", unwrap_or(cubes[2].angle, -9999.))
-                            visionTable.putNumber("Cubes.2.offset", unwrap_or(cubes[2].offset, -9999.))
-
-                if videoTesting:
-                    cv.imshow("Field", frame)
-
 
             #################################
             # Check for stopping conditions #

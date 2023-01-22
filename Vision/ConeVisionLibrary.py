@@ -55,7 +55,7 @@ class ConeVisionLibrary(VisionBase):
                 screenPercent = w * h / (cameraWidth * cameraHeight)
                 offset = -offsetInInches
                 
-                data.append(FoundObject("CUBE", x, y,
+                data.append(FoundObject("CONE", x, y,
                     w=w,
                     h=h,
                     distance=distanceToObject,
