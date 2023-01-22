@@ -74,18 +74,18 @@ videoDirectory = '/home/pi/Team4121/Videos'
 cameraValues={}
 
 #Define program control flags
-useNavx = False
+useNavx = True
 videoTesting = True
 resizeVideo = False
 saveVideo = False
+navxTesting = True
 
 #Define main processing function
 def main():
-
+    global useNavx
+    
     #Define flags
     networkTablesConnected = False
-    foundTape = False
-    tapeTargetLock = False
 
     #Define variables
     gyroAngle = 0
@@ -126,7 +126,7 @@ def main():
         log_file.write('Error message: ', sys.exc_info()[0])
         log_file.write('\n')
 
-
+    print("connected to table" if networkTablesConnected else "printing output")
 
     #Start main processing loop
     while (True):
@@ -148,8 +148,10 @@ def main():
             gyroAngle = -9999  #Set default gyro angle
    
         #Put gyro value in NetworkTables
-        if networkTablesConnected == True:
+        if networkTablesConnected:
             navxTable.putNumber("GyroAngle", gyroAngle)
+        if navxTesting:
+            print(gyroAngle)
 
         #################################
         # Check for stopping conditions #
