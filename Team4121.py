@@ -81,7 +81,7 @@ saveVideo = False
 navxTesting = 50 # 0 to disable
 
 def round_tuple(tup, p):
-    return '(' + ', '.join((("{:." + str(p) + "f}").format(v) for v in tup)) + ')'
+    return '(' + ', '.join((("{:" + str(p + 1) + "." + str(p) + "f}").format(v) for v in tup)) + ')'
 
 #Define main processing function
 def main():
@@ -156,7 +156,7 @@ def main():
         if navxTesting:
             loopCount += 1
             if loopCount + 1 == navxTesting:
-                print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
+                print("angle: {}\torientation: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_orientation(), 4), round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
                 loopCount = 0
 
         #################################

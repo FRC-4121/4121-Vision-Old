@@ -77,6 +77,7 @@ class FRCNavx:
         self.angle = 0.0
         self.yaw = 0.0
         self.pitch = 0.0
+        self.roll = 0.0
         self.time = []
         self.date = []
        
@@ -101,12 +102,21 @@ class FRCNavx:
         self.pitch = round(self.vmx.getAHRS().GetPitch(), 2)
         return self.pitch
 
+    # Define read pitch method
+    def read_roll(self):
+
+        self.roll = round(self.vmx.getAHRS().GetRoll(), 2)
+        return self.roll
+
 
     # Define reset gyro method
     def reset_gyro(self):
 
         self.vmx.Reset()
         self.vmx.ZeroYaw()
+
+    def read_orientation(self):
+        return (self.read_yaw(), self.read_pitch(), self.read_roll())
 
     # What could this possibly do?
     def read_acceleration(self):
