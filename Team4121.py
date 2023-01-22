@@ -78,7 +78,7 @@ useNavx = True
 videoTesting = True
 resizeVideo = False
 saveVideo = False
-navxTesting = True
+navxTesting = 50 # 0 to disable
 
 def round_tuple(tup, p):
     return '(' + ', '.join((("{:." + str(p) + "f}").format(v) for v in tup)) + ')'
@@ -86,7 +86,7 @@ def round_tuple(tup, p):
 #Define main processing function
 def main():
     global useNavx
-
+    loopCount = 0
     #Define flags
     networkTablesConnected = False
 
@@ -154,7 +154,10 @@ def main():
         if networkTablesConnected:
             navxTable.putNumber("GyroAngle", gyroAngle)
         if navxTesting:
-            print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
+            loopCount += 1
+            if loopCount + 1 == navxTesting:
+                print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
+                loopCount = 0
 
         #################################
         # Check for stopping conditions #
