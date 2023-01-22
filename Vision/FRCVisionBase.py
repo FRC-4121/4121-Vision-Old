@@ -24,26 +24,25 @@ class VisionBase:
 
     # Define class fields
     visionFile = ""
-    fileSection = ""
-    objectValues = {}
 
 
     # Class Initialization method
     # Reads the contents of the supplied vision settings file
-    def __init__(self, visionfile):
+    def __init__(self, visionfile, sections):
 
         #Read in vision settings file
         self.visionFile = visionfile
-        self.read_vision_file(self.visionFile)
+        self.read_vision_file(self.visionFile, sections)
 
 
     # Read vision settings file
-    def read_vision_file(self, file, section):
+    # Sections is a SECTION: DICT dictionary
+    def read_vision_file(self, file, sections = {}):
 
         # Declare local variables
         value_section = ''
         new_section = False
-
+        section = {}
         # Open the file and read contents
         try:
             
@@ -53,7 +52,7 @@ class VisionBase:
             # Read in all lines
             value_list = in_file.readlines()
             
-            # Process all lines
+            # Process list of lines
             for line in value_list:
                 
                 # Remove trailing newlines and whitespace
@@ -62,22 +61,26 @@ class VisionBase:
                 # Split the line into parts
                 split_line = clean_line.split(',')
 
-                # Determine which section of the file we are in
-                if split_line[0].upper() == section:
-                    sectionFound = True
+                # Determine section of the file we are in
+                upper_line = split_line[0].upper()
+                if upper_line[-1] == ':' and upper_line[:-1] in sections:
+                    value_section = upper_line[-1]
+                    new_section = True
+                elif split_line[0] == '':
+                    value_section = ''
+                    new_section = True
                 else:
-                    sectionFound - False
+                    new_section = False
 
-                # Read in the object's values from the target section
-                if sectionFound:
-                    self.objectValues[split_line[0].upper()] = split_line[1]
+                # Take action based on section
+                if not new_section:
+                    sections[value_section][split_line[0].upper()] = split_line[1]
         
         except FileNotFoundError:
-
             return False
         
         return True
-    
+
 
     # Define basic image processing method for finding contours
     # Converts image from BGR color space to HSV and then applies a mask
