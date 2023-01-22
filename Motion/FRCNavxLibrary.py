@@ -47,7 +47,6 @@ class FRCNavx:
             # Reset Navx and initialize time
             self.vmx.getAHRS().Reset()
             self.vmx.getAHRS().ZeroYaw()
-            self.vmx.getAHRS().ZeroPitch()
             self.time = self.vmx.getTime().GetRTCTime()
             self.date = self.vmx.getTime().GetRTCDate()
             self.poisoned = False
@@ -109,6 +108,20 @@ class FRCNavx:
         self.vmx.Reset()
         self.vmx.ZeroYaw()
 
+    # What could this possibly do?
+    def read_acceleration(self):
+        ahrs = self.vmx.getAHRS()
+        (ahrs.GetWorldLinearAccelX(), ahrs.GetWorldLinearAccelY(), ahrs.GetWorldLinearAccelZ())
+
+    # What could this possibly do?
+    def read_velocity(self):
+        ahrs = self.vmx.getAHRS()
+        (ahrs.GetVelocityX(), ahrs.GetVelocityY(), ahrs.GetVelocityZ())
+    
+    def read_position(self):
+        ahrs = self.vmx.getAHRS()
+        (ahrs.GetDisplacementX(), ahrs.GetDisplacementY(), ahrs.GetDisplacementZ())
+    
 
     # Define read time method
     def read_time(self):

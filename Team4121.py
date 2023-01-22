@@ -83,7 +83,7 @@ navxTesting = True
 #Define main processing function
 def main():
     global useNavx
-    
+
     #Define flags
     networkTablesConnected = False
 
@@ -151,7 +151,7 @@ def main():
         if networkTablesConnected:
             navxTable.putNumber("GyroAngle", gyroAngle)
         if navxTesting:
-            print(gyroAngle)
+            print("angle: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, navx.read_acceleration(), navx.read_velocity(), navx.read_position()))
 
         #################################
         # Check for stopping conditions #
