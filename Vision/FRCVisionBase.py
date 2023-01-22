@@ -148,7 +148,6 @@ class VisionBase:
 
     # Method for finding game objects
     # Generic method which will be overidden by child classes
-    def find_object(self, imgRaw, cameraWidth, cameraHeight, cameraFOV, objectColor):
+    def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV, objectColor):
 
         pass 
-

@@ -60,7 +60,6 @@ from networktables import NetworkTables
 from time import sleep
 
 #Team 4121 module imports
-from FRCVisionLibrary import VisionLibrary
 from FRCCameraLibrary import FRCWebCam
 from FRCNavxLibrary import FRCNavx
 
@@ -290,7 +289,7 @@ def main():
         goalResizeFactor = int(cameraValues['GoalCamResizeFactor'])
 
     #Create vision processing
-    visionProcessor = VisionLibrary(visionFile)
+    # visionProcessor = VisionLibrary(visionFile)
 
     #Create blank vision image
     imgField = np.zeros(shape=(int(cameraValues['FieldCamWidth']), int(cameraValues['FieldCamHeight']), 3), dtype=np.uint8)
@@ -314,15 +313,15 @@ def main():
             imgField = fieldCamera.read_frame()
 
             #Call detection methods
-            if findBalls == True:
-                ballsFound, ballData = visionProcessor.detect_game_balls_only(imgField, int(cameraValues['FieldCamWidth']),
-                                                                        int(cameraValues['FieldCamHeight']),
-                                                                        float(cameraValues['FieldCamFOV']),
-                                                                        int(ballColor))
-            if findMarkers == True:
-                markersFound, markerData = visionProcessor.detect_field_marker(imgField, int(cameraValues['FieldCamWidth']),
-                                                                        int(cameraValues['FieldCamHeight']),
-                                                                        float(cameraValues['FieldCamFOV']))
+            #if findBalls == True:
+            #    ballsFound, ballData = visionProcessor.detect_game_balls_only(imgField, int(cameraValues['FieldCamWidth']),
+            #                                                            int(cameraValues['FieldCamHeight']),
+            #                                                            float(cameraValues['FieldCamFOV']),
+            #                                                            int(ballColor))
+            #if findMarkers == True:
+            #    markersFound, markerData = visionProcessor.detect_field_marker(imgField, int(cameraValues['FieldCamWidth']),
+            #                                                            int(cameraValues['FieldCamHeight']),
+            #                                                            float(cameraValues['FieldCamFOV']))
 
             #Draw ball contours and target data on the image
             if ballsFound > 0:
@@ -426,43 +425,43 @@ def main():
             imgBlankRaw = np.zeros(shape=(int(cameraValues['GoalCamWidth']), int(cameraValues['GoalCamHeight']), 3), dtype=np.uint8)
 
             #Call detection method
-            tapeCameraValues, tapeRealWorldValues, foundTape, tapeTargetLock = visionProcessor.detect_four_vision_tapes_rectangle(imgGoal, int(cameraValues['GoalCamWidth']),
-                                                                                                                            int(cameraValues['GoalCamHeight']),
-                                                                                                                            float(cameraValues['GoalCamFOV']),
-                                                                                                                            float(cameraValues['GoalCamFocalLength']),
-                                                                                                                            float(cameraValues['GoalCamMountAngle']),
-                                                                                                                            float(cameraValues['GoalCamMountHeight']))
+            #tapeCameraValues, tapeRealWorldValues, foundTape, tapeTargetLock = visionProcessor.detect_four_vision_tapes_rectangle(imgGoal, int(cameraValues['GoalCamWidth']),
+            #                                                                                                                int(cameraValues['GoalCamHeight']),
+            #                                                                                                                float(cameraValues['GoalCamFOV']),
+            #                                                                                                                float(cameraValues['GoalCamFocalLength']),
+            #                                                                                                                float(cameraValues['GoalCamMountAngle']),
+            #                                                                                                                float(cameraValues['GoalCamMountHeight']))
 
             #Draw vision tape contours and target data on the image
-            if foundTape == True:
+            # if foundTape == True:
 
                 # if tapeTargetLock:
-                cv.rectangle(imgGoal,(tapeCameraValues['TargetX'],tapeCameraValues['TargetY']),(tapeCameraValues['TargetX']+tapeCameraValues['TargetW'],tapeCameraValues['TargetY']+tapeCameraValues['TargetH']),(0,0,255),2) #vision tape
+                # cv.rectangle(imgGoal,(tapeCameraValues['TargetX'],tapeCameraValues['TargetY']),(tapeCameraValues['TargetX']+tapeCameraValues['TargetW'],tapeCameraValues['TargetY']+tapeCameraValues['TargetH']),(0,0,255),2) #vision tape
                 
-                cv.putText(imgBlankRaw, 'Tape Distance (A): %.2f' %tapeRealWorldValues['StraightDistance'], (10, 30), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Tape Distance (S): %.2f' %tapeRealWorldValues['TapeDistance'], (10, 50), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Wall Distance: %.2f' %tapeRealWorldValues['WallDistance'], (10, 70), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Bot Angle: %.2f' %tapeRealWorldValues['BotAngle'], (10, 90), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'IPP: %.2f' %tapeCameraValues['IPP'], (10, 130), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Vert Offset: %.2f' %tapeRealWorldValues['VertOffset'], (10, 150), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Offset: %.2f' %tapeCameraValues['Offset'], (10, 170), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Target Width: %.2f' %tapeCameraValues['TargetW'], (10, 190), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'Apparent Width: %.2f' %tapeRealWorldValues['ApparentWidth'], (10, 210), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
-                cv.putText(imgBlankRaw, 'FoundTape: ' + str(foundTape), (10, 230), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Tape Distance (A): %.2f' %tapeRealWorldValues['StraightDistance'], (10, 30), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Tape Distance (S): %.2f' %tapeRealWorldValues['TapeDistance'], (10, 50), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Wall Distance: %.2f' %tapeRealWorldValues['WallDistance'], (10, 70), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Bot Angle: %.2f' %tapeRealWorldValues['BotAngle'], (10, 90), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'IPP: %.2f' %tapeCameraValues['IPP'], (10, 130), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Vert Offset: %.2f' %tapeRealWorldValues['VertOffset'], (10, 150), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Offset: %.2f' %tapeCameraValues['Offset'], (10, 170), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Target Width: %.2f' %tapeCameraValues['TargetW'], (10, 190), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'Apparent Width: %.2f' %tapeRealWorldValues['ApparentWidth'], (10, 210), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
+                # cv.putText(imgBlankRaw, 'FoundTape: ' + str(foundTape), (10, 230), cv.FONT_HERSHEY_SIMPLEX, .45,(0, 0, 255), 1)
                 
 
                 #Write target data to network table
-                if networkTablesConnected == True:
-                    visionTable.putBoolean("FoundTape", foundTape)
-                    visionTable.putBoolean("TargetLock", tapeTargetLock)
-                    visionTable.putNumber("TapeDistance", tapeRealWorldValues['TapeDistance'])
-                    visionTable.putNumber("TapeOffset", tapeCameraValues['Offset'])
-            else:
-                if networkTablesConnected == True:
-                    visionTable.putBoolean("FoundTape", foundTape)
-                    visionTable.putBoolean("TargetLock", tapeTargetLock)
-                    visionTable.putNumber("TapeDistance", 0)
-                    visionTable.putNumber("TapeOffset", 0)
+                # if networkTablesConnected == True:
+                #     visionTable.putBoolean("FoundTape", foundTape)
+                #     visionTable.putBoolean("TargetLock", tapeTargetLock)
+                #     visionTable.putNumber("TapeDistance", tapeRealWorldValues['TapeDistance'])
+                #     visionTable.putNumber("TapeOffset", tapeCameraValues['Offset'])
+            # else:
+            #     if networkTablesConnected == True:
+            #         visionTable.putBoolean("FoundTape", foundTape)
+            #         visionTable.putBoolean("TargetLock", tapeTargetLock)
+            #         visionTable.putNumber("TapeDistance", 0)
+            #         visionTable.putNumber("TapeOffset", 0)
 
             #Determine if image should be resized before showing and saving
             if resizeVideo:
