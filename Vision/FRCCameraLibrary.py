@@ -16,7 +16,7 @@
 #                                                                    #
 ######################################################################
 
-'''FRC Camera Library - Provides threaded camera methods and utilities'''
+"""FRC Camera Library - Provides threaded camera methods and utilities"""
 
 # System imports
 import sys
@@ -32,54 +32,60 @@ from threading import Thread
 logging.basicConfig(level=logging.DEBUG)
 
 # Set global variables
-calibration_dir = '/home/pi/Team4121/Config'
+calibration_dir = "/home/pi/Team4121/Config"
 
 
 # Define the web camera class
 class FRCWebCam:
-
+    config = {"": {}}
+    init = False
     # Define initialization
-    def __init__(self, src, name, settings, logfilenumber, videofile):
-
+    def __init__(self, name, timestamp, videofile = None):
+        self.name = name
+        self.device_id = self.get_config("ID", "")
+        
         #Open a log file
-        logFilename = '/home/pi/Team4121/Logs/Webcam_Log_' + logfilenumber + '.txt'
-        self.log_file = open(logFilename, 'w')
-        self.log_file.write('Initializing webcam: ' + str(logfilenumber))
-        self.log_file.write('')
-
+        logFilename = "/home/pi/Team4121/Logs/Webcam_Log_{}_{}.txt".format(self.name, timestamp)
+        if videofile is None:
+            videofile = "{}_{}".format(name, timestamp)
+        self.log_file = open(logFilename, "w")
+        self.log_file.write("Initializing webcam: {}\n".format(self.name))
+        if self.device_id == "":
+            print("Device ID not specified for camera {}".format(self.name))
+            self.log_file.write("Device ID not specified for camera {}\n".format(self.name))
+            return
         # Initialize instance variables
         self.undistort_img = False
 
         # Store frame size
-        self.height = int(settings['Height'])
-        self.width = int(settings['Width'])
-
+        self.height = int(self.get_config("HEIGHT", 240))
+        self.width = int(self.get_config("WIDTH", 320))
+        self.fov = float(self.get_config("FOV", 0.0))
         # Set up web camera
-        self.device_id = src
         self.camStream = cv.VideoCapture(self.device_id)
         self.camStream.set(cv.CAP_PROP_FRAME_WIDTH, self.width)
         self.camStream.set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
-        self.camStream.set(cv.CAP_PROP_BRIGHTNESS, float(settings['Brightness']))
-        self.camStream.set(cv.CAP_PROP_EXPOSURE, int(settings['Exposure']))
-        self.camStream.set(cv.CAP_PROP_FPS, int(settings['FPS']))
+        self.camStream.set(cv.CAP_PROP_BRIGHTNESS, float(self.get_config("BRIGHTNESS", 0)))
+        self.camStream.set(cv.CAP_PROP_EXPOSURE, int(self.get_config("EXPOSURE", 0)))
+        self.camStream.set(cv.CAP_PROP_FPS, int(self.get_config("FPS", 15)))
 
         # Set up video writer
-        self.videoFilename = '/home/pi/Team4121/Videos/' + videofile + '.avi'
-        self.fourcc = cv.VideoWriter_fourcc('M','J','P','G')
+        self.videoFilename = "/home/pi/Team4121/Videos/" + videofile + ".avi"
+        self.fourcc = cv.VideoWriter_fourcc("M","J","P","G")
         self.camWriter = cv.VideoWriter()
 
         try:
             self.camWriter.open(self.videoFilename, self.fourcc, 
-                                float(settings['FPS']), 
+                                float(self.get_config("FPS", 15)), 
                                 (self.width, self.height),
                                 True)
         except:
-            self.log_file.write('Error opening video writer for file: ' + self.videoFilename)
+            self.log_file.write("Error opening video writer for file: {}\n".format(self.videoFilename))
         
-        if (self.camWriter.isOpened()):
-            self.log_file.write("Video writer is open")
+        if self.camWriter.isOpened():
+            self.log_file.write("Video writer is open\n")
         else:
-            self.log_file.write("Video writer is NOT open")
+            self.log_file.write("Video writer is NOT open\n")
 
         # Make sure video capture is opened
         if self.camStream.isOpened() == False:
@@ -98,15 +104,69 @@ class FRCWebCam:
         self.stopped = False
 
         # Read camera calibration files
-        cam_matrix_file = calibration_dir + '/Camera_Matrix_Cam' + str(self.device_id) + '.txt'
-        cam_coeffs_file = calibration_dir + '/Distortion_Coeffs_Cam' + str(self.device_id) + '.txt'
+        cam_matrix_file = calibration_dir + "/Camera_Matrix_Cam" + str(self.device_id) + ".txt"
+        cam_coeffs_file = calibration_dir + "/Distortion_Coeffs_Cam" + str(self.device_id) + ".txt"
         if os.path.isfile(cam_matrix_file) == True and os.path.isfile(cam_coeffs_file) == True:
             self.cam_matrix = np.loadtxt(cam_matrix_file)
             self.distort_coeffs = np.loadtxt(cam_coeffs_file)
             self.undistort_img = True
         
         # Log init complete message
-        self.log_file.write("Webcam initialization complete")
+        self.log_file.write("Webcam initialization complete\m")
+
+    @staticmethod
+    def read_config_file(file, reload = False):
+        if FRCWebCam.init and not reload:
+            return True
+        FRCWebCam.init = True
+        # Declare local variables
+        value_section = ''
+        # Open the file and read contents
+        try:
+            
+            # Open the file for reading
+            in_file = open(file, 'r')
+            
+            # Read in all lines
+            value_list = in_file.readlines()
+            
+            # Process list of lines
+            for line in value_list:
+                
+                # Remove trailing newlines and whitespace
+                clean_line = line.strip()
+                if len(clean_line) == 0:
+                    continue
+                # Split the line into parts
+                split_line = clean_line.split('=')
+                # Determine section of the file we are in
+                upper_line = split_line[0].upper()
+                
+                if upper_line[-1] == ':':
+                    value_section = upper_line[:-1]
+                    if not value_section in FRCWebCam.config:
+                        FRCWebCam.config[value_section] = {}
+                elif split_line[0] == '':
+                    value_section = ''
+                    if not value_section in FRCWebCam.config:
+                        FRCWebCam.config[value_section] = {}
+                else:
+                    FRCWebCam.config[value_section][split_line[0].upper()] = split_line[1]
+        
+        except FileNotFoundError:
+            return False
+        
+        return True
+
+    def get_config(self, name, default):
+        if self.name in FRCWebCam.config:
+            cfg = FRCWebCam.config[self.name]
+            if name in cfg:
+                return cfg[name]
+        cfg = FRCWebCam.config[""]
+        if name in cfg:
+            return cfg[name]
+        return default
 
 
     # Define camera thread start method
@@ -151,7 +211,8 @@ class FRCWebCam:
 
             # Grab new frame
             self.grabbed, self.frame = self.camStream.read()
-
+            if not self.grabbed:
+                return newFrame
             # Undistort image
             if self.undistort_img == True:
                 h, w = self.frame.shape[:2]
@@ -171,10 +232,7 @@ class FRCWebCam:
         except Exception as read_error:
 
             # Write error to log
-            self.log_file.write('Error reading video:')
-            self.log_file.write(type(read_error))
-            self.log_file.write(read_error.args)
-            self.log_file.write(read_error)
+            self.log_file.write("Error reading video:\n    type: {}\n    args: {}\n    {}\n".format(type(read_error), read_error.args, read_error))
 
         # Return the most recent frame
         return newFrame
@@ -207,10 +265,7 @@ class FRCWebCam:
         except Exception as read_error:
 
             # Write error to log
-            self.log_file.write('Error reading video (threaded):')
-            self.log_file.write(type(read_error))
-            self.log_file.write(read_error.args)
-            self.log_file.write(read_error)
+            self.log_file.write("Error reading video (threaded):\n    type: {}\n    args: {}\n    {}\n".format(type(read_error), read_error.args, read_error))
 
         # Return the most recent frame
         return newFrame
@@ -220,7 +275,7 @@ class FRCWebCam:
     def write_video(self, img):
 
         # Check if write is opened
-        if (self.camWriter.isOpened()):
+        if self.camWriter.isOpened():
 
             # Write the image
             try:
@@ -231,15 +286,12 @@ class FRCWebCam:
             except Exception as write_error:
 
                 # Print exception info
-                self.log_file.write('Error writing video:')
-                self.log_file.write(type(write_error))
-                self.log_file.write(write_error.args)
-                self.log_file.write(write_error)
+                self.log_file.write("Error writing video:\n    type: {}\n    args: {}\n    {}\n".format(type(write_error), write_error.args, write_error))
                 return False
         
         else:
 
-            self.log_file.write('Video writer not opened')
+            self.log_file.write("Video writer not opened!\n")
             return False
 
 
@@ -253,6 +305,6 @@ class FRCWebCam:
         self.camWriter.release()
 
         # Close the log file
-        self.log_file.write('Webcam closed. Video writer closed.')
+        self.log_file.write("Webcam closed. Video writer closed.\n")
         self.log_file.close()
 

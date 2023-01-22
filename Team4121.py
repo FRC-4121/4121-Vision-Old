@@ -122,6 +122,12 @@ def put_iterable(table, name, tup):
     for (elem, count) in zip(tup, range(len(tup))):
         table.putNumber(name + "." + str(count), elem)
 
+def unwrap_or(val, default):
+    if val is None:
+        return default
+    else:
+        return val
+
 #Define main processing function
 def main():
 
@@ -152,6 +158,9 @@ def main():
         navx = FRCNavx('NavxStream')
         timeString = navx.get_raw_time()
         useNavx = not navx.poisoned
+    
+    FRCWebCam.read_config_file(cameraFile)
+    fieldCam = FRCWebCam('FIELD', timeString)
         
 
     #Open a log file
@@ -191,27 +200,67 @@ def main():
                     navx.reset_gyro()
                     navxTable.putNumber("ZeroGyro", 0)      
                 gyroAngle = navx.read_angle()  #Read gyro angle
+                
+                #Put gyro value in NetworkTables
+                if networkTablesConnected:
+                    navxTable.putNumber("GyroAngle", gyroAngle)
+                    put_iterable(navxTable, "Orientation", navx.read_orientation())
+                    put_iterable(navxTable, "Acceleration", navx.read_acceleration())
+                    put_iterable(navxTable, "Velocity", navx.read_velocity())
+                    put_iterable(navxTable, "Position", navx.read_position())
 
+                
+                navxLoopCount += 1
+                if navxLoopCount + 1 == navxTesting:
+                    print("angle: {:7.2f}\torientation: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_orientation(), 2, 3), round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
+                    navxLoopCount = 0
             else:
                 gyroAngle = -9999  #Set default gyro angle
-    
-            #Put gyro value in NetworkTables
-            if networkTablesConnected:
-                navxTable.putNumber("GyroAngle", gyroAngle)
-                put_iterable(navxTable, "Orientation", navx.read_orientation())
-                put_iterable(navxTable, "Acceleration", navx.read_acceleration())
-                put_iterable(navxTable, "Velocity", navx.read_velocity())
-                put_iterable(navxTable, "Position", navx.read_position())
-
             
-            navxLoopCount += 1
-            if navxLoopCount + 1 == navxTesting:
-                print("angle: {:7.2f}\torientation: {}\tacceleration: {}\tvelocity: {}\tposition: {}".format(gyroAngle, round_tuple(navx.read_orientation(), 2, 3), round_tuple(navx.read_acceleration(), 4), round_tuple(navx.read_velocity(), 4), round_tuple(navx.read_position(), 4)))
-                navxLoopCount = 0
+            
 
-            visionLoopCount += 1
-            if visionLoopCount + 1 == visionTesting:
-                visionLoopCount = 0
+            ###################
+            # Process Web Cam #
+            ###################
+
+            cv.imshow("Field", cubeLib.find_with_camera(fieldCam))
+
+            if False:
+                
+                frame, cubes = cubeLib.find_with_camera(fieldCam)
+                
+                if len(cubes) >= 1:
+
+                    cube = cubes[0]
+                    cv.rectangle(frame, cube.x, cube.y, cube.w, cube.h, (255, 0, 0), 2)
+                    cv.putText(frame, "distance: {:.2f}".format(cube.distance), (10, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    cv.putText(frame, "angle: {:.2f}".format(cube.angle), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    cv.putText(frame, "offset: {:.2f}".format(cube.offset), (10, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                visionLoopCount += 1
+                if visionLoopCount + 1 == visionTesting:
+                    print("found {} cubes".format(len(cubes)))
+                    visionLoopCount = 0
+                
+                if networkTablesConnected:
+                    visionTable.putNumber("CubesFound", len(cubes))
+                    if len(cubes) >= 1:
+                        visionTable.putNumber("Cubes.0.distance", unwrap_or(cubes[0].distance, -9999.))
+                        visionTable.putNumber("Cubes.0.angle", unwrap_or(cubes[0].angle, -9999.))
+                        visionTable.putNumber("Cubes.0.offset", unwrap_or(cubes[0].offset, -9999.))
+                        if len(cubes) >= 2:
+                            visionTable.putNumber("Cubes.1.distance", unwrap_or(cubes[1].distance, -9999.))
+                            visionTable.putNumber("Cubes.1.angle", unwrap_or(cubes[1].angle, -9999.))
+                            visionTable.putNumber("Cubes.1.offset", unwrap_or(cubes[1].offset, -9999.))
+                            if len(cubes) >= 3:
+                                visionTable.putNumber("Cubes.2.distance", unwrap_or(cubes[2].distance, -9999.))
+                                visionTable.putNumber("Cubes.2.angle", unwrap_or(cubes[2].angle, -9999.))
+                                visionTable.putNumber("Cubes.2.offset", unwrap_or(cubes[2].offset, -9999.))
+
+                if videoTesting:
+                    cv.imshow("Field", frame)
+
+
             #################################
             # Check for stopping conditions #
             #################################

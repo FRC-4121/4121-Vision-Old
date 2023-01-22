@@ -26,10 +26,12 @@ class FoundObject:
     # initialize FoundObject, with unused fields defaulting to None
     # ty, x, and y are mandatory
     # all other parameters must be named
-    def __init__(self, ty, x, y, *, radius = None, distance = None, angle = None, offset = None, percent = None):
+    def __init__(self, ty, x, y, *, w = None, h = None, radius = None, distance = None, angle = None, offset = None, percent = None):
         self.ty = ty
         self.x = x
         self.y = y
+        self.w = w
+        self.h = h
         self.radius = radius
         self.distance = distance
         self.angle = angle
@@ -74,7 +76,6 @@ class VisionBase:
         VisionBase.init = True
         # Declare local variables
         value_section = ''
-        new_section = False
         # Open the file and read contents
         try:
             
@@ -89,23 +90,22 @@ class VisionBase:
                 
                 # Remove trailing newlines and whitespace
                 clean_line = line.strip()
-
+                if len(clean_line) == 0:
+                    continue
                 # Split the line into parts
-                split_line = clean_line.split(',')
-
+                split_line = clean_line.split('=')
                 # Determine section of the file we are in
                 upper_line = split_line[0].upper()
+                
                 if upper_line[-1] == ':':
-                    value_section = upper_line[-1]
-                    new_section = True
+                    value_section = upper_line[:-1]
+                    if not value_section in VisionBase.config:
+                        VisionBase.config[value_section] = {}
                 elif split_line[0] == '':
                     value_section = ''
-                    new_section = True
+                    if not value_section in VisionBase.config:
+                        VisionBase.config[value_section] = {}
                 else:
-                    new_section = False
-
-                # Take action based on section
-                if not new_section:
                     VisionBase.config[value_section][split_line[0].upper()] = split_line[1]
         
         except FileNotFoundError:
@@ -123,7 +123,7 @@ class VisionBase:
         finalImg = ""
 
         # Blur image to remove noise
-        blur = cv.GaussianBlur(imgRaw.copy(),(13,13),0)
+        blur = cv.GaussianBlur(imgRaw, (13, 13), 0)
         
         # Convert from BGR to HSV colorspace
         hsv = cv.cvtColor(blur, cv.COLOR_BGR2HSV)
@@ -139,7 +139,7 @@ class VisionBase:
 
         if erodeDilate:
             # Erode image to reduce background noise
-            kernel = np.ones((3,3), np.uint8)
+            kernel = np.ones((3, 3), np.uint8)
             erode = cv.erode(edges, kernel, iterations=2)
             
             # cv.imshow('erode', erode)
@@ -155,7 +155,7 @@ class VisionBase:
             finalImg = edges
         
         # Find contours in mask
-        contours, _ = cv.findContours(finalImg,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv.findContours(finalImg, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     
         return contours
 
@@ -164,7 +164,7 @@ class VisionBase:
     def process_image_edges(self, imgRaw):
 
         # Blur image to remove noise
-        blur = cv.GaussianBlur(imgRaw.copy(),(13,13),0)
+        blur = cv.GaussianBlur(imgRaw, (13, 13), 0)
         
         # Convert from BGR to HSV colorspace
         hsv = cv.cvtColor(blur, cv.COLOR_BGR2HSV)
@@ -173,13 +173,19 @@ class VisionBase:
         edges = cv.Canny(hsv, 35, 125)
 
         # Find contours using edges
-        _, contours, _ = cv.findContours(edges.copy(),cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
         return contours
     
 
     # Method for finding game objects
     # Generic method which will be overidden by child classes
-    def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV, objectColor):
+    def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
 
-        pass 
+        pass
+
+
+    def find_with_camera(self, cam):
+        frame = np.zeros((cam.width, cam.height, 3), np.uint8)
+        frame = cam.read_frame()
+        return frame#, self.find_objects(frame, cam.width, cam.height, cam.fov)

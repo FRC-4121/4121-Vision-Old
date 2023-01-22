@@ -15,10 +15,10 @@ class ConeVisionLibrary(VisionBase):
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
         
         # Read HSV values from dictionary and make tuples
-        coneHSVMin = (int(VisionBase.config["CONES"]['HMIN']), int(VisionBase.config["CONES"]['SMIN']), int(VisionBase.config["CONES"]['VMIN']))
-        coneHSVMax = (int(VisionBase.config["CONES"]['HMAX']), int(VisionBase.config["CONES"]['SMAX']), int(VisionBase.config["CONES"]['VMAX']))
-        coneMinRadius = VisionBase.config["CONES"]['MINRADIUS']
-        coneRadius    = VisionBase.config["CONES"]['RADIUS']
+        coneHSVMin = (int(VisionBase.config["CONE"]['HMIN']), int(VisionBase.config["CONE"]['SMIN']), int(VisionBase.config["CONE"]['VMIN']))
+        coneHSVMax = (int(VisionBase.config["CONE"]['HMAX']), int(VisionBase.config["CONE"]['SMAX']), int(VisionBase.config["CONE"]['VMAX']))
+        coneMinRadius = VisionBase.config["CONE"]['MINRADIUS']
+        coneRadius    = VisionBase.config["CONE"]['RADIUS']
         
         # Initialize variables (Cone)
         conesFound = 0
