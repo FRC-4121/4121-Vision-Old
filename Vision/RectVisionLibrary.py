@@ -1,39 +1,31 @@
 from FRCVisionBase import *
 
-mul_abs = lambda x: 1/x if x < 1 else x
-
-class ConeVisionLibrary(VisionBase):
-
-    # Define class fields
-    cone_values = {}
-
+class RectVisionLibrary(VisionBase):
 
     # Define class initialization
-    def __init__(self):
-        
+    def __init__(self, name):
+        self.name = name
         super()
-        
+    
 
-    # Locates the cones and cones in the game (2023)
-    # returns a tuple containing (cones, cones)
+    # Locates the cubes and cones in the game (2023)
+    # returns a tuple containing (cubes, cones)
     def find_objects(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
-        
-        config = VisionBase.config["CONE"]
+
         # Read configuration values from dictionary and make tuples
-        HSVMin    = (int(config['HMIN']), int(config['SMIN']), int(config['VMIN']))
-        HSVMax    = (int(config['HMAX']), int(config['SMAX']), int(config['VMAX']))
-        minArea   = float(config['MINAREA'])
-        tolerance = float(config['TOLERANCE'])
-        minVis    = float(config['MINVIS'])
-        width     = float(config['WIDTH'])
-        height    = float(config['HEIGHT'])
+        HSVMin    = (self.cfg('HMIN',   0, int), self.cfg('SMIN',   0, int), self.cfg('VMIN',   0, int))
+        HSVMax    = (self.cfg('HMAX', 255, int), self.cfg('SMAX', 255, int), self.cfg('VMAX', 255, int))
+        minArea   = self.cfg('MINAREA', 0, int)
+        tolerance = self.cfg('TOLERANCE', 1.0, float)
+        minVis    = self.cfg('MINVIS', 0.0, float, False)
+        width     = self.cfg('WIDTH', None, float)
+        height    = self.cfg('WIDTH', None, float)
+        recip     = self.cfg('RECIPROCAL', False, bool, False)
         aspect    = height / width
         
-        # Initialize variables (Cone)
+        # Initialize variables
         data = []
-        
 
-        
         # Find contours in the mask and clean up the return style from OpenCV
         contours = self.process_image_contours(imgRaw, HSVMin, HSVMax, False, False)
         if len(contours) > 0:
@@ -45,7 +37,7 @@ class ConeVisionLibrary(VisionBase):
                 if w * h < minArea: # in pixel units
                     break
                 
-                if abs(mul_abs(h / w) / aspect - 1.0) > tolerance or cv.contourArea(contour) / (w * h) < minVis:
+                if (abs(h / w / aspect - 1.0) > tolerance and (not recip and abs(w / h / aspect - 1.0) > tolerance)) or cv.contourArea(contour) / (w * h) < minVis:
                     continue
 
                 # Calculate metrics
@@ -57,7 +49,7 @@ class ConeVisionLibrary(VisionBase):
                 screenPercent = w * h / (cameraWidth * cameraHeight)
                 offset = -offsetInInches
                 
-                data.append(FoundObject("CONE", x, y,
+                data.append(FoundObject(self.name, x, y,
                     w=w,
                     h=h,
                     distance=distanceToObject,
@@ -67,3 +59,8 @@ class ConeVisionLibrary(VisionBase):
                 ))
         
         return data
+
+CubeVisionLibrary = lambda: RectVisionLibrary("CUBE")
+ConeVisionLibrary = lambda: RectVisionLibrary("CONE")
+TapeVisionLibrary = lambda: RectVisionLibrary("TAPE")
+TapeRectVisionLibrary = TapeVisionLibrary

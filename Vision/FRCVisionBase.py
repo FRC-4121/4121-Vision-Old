@@ -61,6 +61,7 @@ class VisionBase:
 
     # Define class fields
     config = {}
+    warned = set()
     init = False
 
     # Class Initialization method
@@ -116,7 +117,16 @@ class VisionBase:
         
         return True
 
-
+    def cfg(self, name, default = None, datatype = str, warn = True):
+        c = VisionBase.config[self.name]
+        if name in c:
+            return datatype(c[name])
+        else:
+            if warn and not (self.name, name) in VisionBase.warned:
+                VisionBase.warned.add((self.name, name))
+                print("No parameter {} available for {}!".format(name, self.name))
+            return default
+        
     # Define basic image processing method for finding contours
     # Converts image from BGR color space to HSV and then applies a mask
     # based on "learned" HSV values from the config file.
