@@ -85,6 +85,7 @@ findTape = False
 navxTesting = 0 # 0 to disable
 visionTesting = 0 # 0 to disable
 networkTablesConnected = False
+startupSleep = 0
 
 piname = hostname()
 currentTime = time.localtime(time.time())
@@ -109,7 +110,8 @@ elif piname == 'raspberrypi4':
     findField = True
     findTape = True
     navxTesting = 0
-    visionTesting = 50
+    visionTesting = 0
+    startupSleep = 0 # TODO: make 60 for game
 else:
     logFilename = '/home/pi/Team4121/Logs/Run_Log_' + timeString + '.txt'
     with open(logFilename, 'w') as log_file:
@@ -275,6 +277,8 @@ def main():
 
     global useNavx, timeString, networkTablesConnected, visionTable, done
 
+    time.sleep(startupSleep)
+    
     navxLoopCount = 0
     visionLoopCount = 0
 
@@ -324,6 +328,10 @@ def main():
                 log_file.write('Connected to Networktables on 10.41.21.2 \n')
 
                 visionTable.putNumber("RobotStop", 0)
+                if useNavx:
+                    visionTable.putString("Time", timeString)
+                else:
+                    timeString = visionTable.getString("Time", timeString)
         except:
             log_file.write('Error:  Unable to connect to Network tables.\n')
             log_file.write('Error message: ', sys.exc_info()[0])
