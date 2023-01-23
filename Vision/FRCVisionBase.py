@@ -18,6 +18,7 @@
 import cv2 as cv
 import numpy as np 
 import math
+from threading import Thread
 
 
 
@@ -65,7 +66,9 @@ class VisionBase:
     # Class Initialization method
     # Reads the contents of the supplied vision settings file
     def __init__(self):
-        pass
+        
+        self.data = []
+        self.isFinished = 0
 
 
     # Read vision settings file
@@ -184,8 +187,19 @@ class VisionBase:
 
         pass
 
+    def _update(self, imgRaw, cameraWidth, cameraHeight, cameraFOV):
 
-    def find_with_camera(self, cam):
-        frame = np.zeros((cam.width, cam.height, 3), np.uint8)
-        frame = cam.read_frame()
-        return frame, self.find_objects(frame, cam.width, cam.height, cam.fov)
+        self.data = self.find_objects(imgRaw, cameraWidth, cameraHeight, cameraFOV)
+        self.isFinished = 1
+
+    def find_objects_threaded(self, imgRaw, cameraWidth, cameraHeight, cameraFOV, name = "findThread"):
+
+        self.isFinished = 0
+
+        calcThread = Thread(target=self._update, name=name, args=(imgRaw, cameraWidth, cameraHeight, cameraFOV))
+        calcThread.daemon = True
+        calcThread.start()
+
+        return self
+
+

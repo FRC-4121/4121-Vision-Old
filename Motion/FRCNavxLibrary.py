@@ -117,7 +117,7 @@ class FRCNavx:
         ahrs = self.vmx.getAHRS()
         ahrs.Reset()
         ahrs.ZeroYaw()
-        self.pitchOffset = ahrs.getPitch()
+        self.pitchOffset = ahrs.GetPitch()
 
     def read_orientation(self):
         return (self.read_yaw(), self.read_pitch(), self.read_roll())

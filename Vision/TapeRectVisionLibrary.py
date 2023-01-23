@@ -8,7 +8,9 @@ class TapeRectVisionLibrary(VisionBase):
 
     # Define class initialization
     def __init__(self):
-        pass
+        
+        super()
+        
 
     # Locates the cubes and cones in the game (2023)
     # returns a tuple containing (cubes, cones)

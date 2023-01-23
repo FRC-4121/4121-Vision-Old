@@ -317,3 +317,15 @@ class FRCWebCam:
         self.log_file.write("Webcam closed. Video writer closed.\n")
         self.log_file.close()
 
+    def use_libs(self, *libs):
+        frame = self.read_frame()
+        return (frame, *[lib.find_objects(frame, self.width, self.height, self.fov) for lib in libs])
+    
+    def _use_libs_update(self, callback, *libs):
+        callback(*self.use_libs(*libs))
+
+    def use_libs_async(self, *libs, callback = lambda _: None, name = "vision"):
+        thread = Thread(target=self._use_libs_update, args=(callback, *libs), name=name)
+        thread.daemon = True
+        thread.start()
+        return thread

@@ -10,7 +10,9 @@ class ConeVisionLibrary(VisionBase):
 
     # Define class initialization
     def __init__(self):
-        pass
+        
+        super()
+        
 
     # Locates the cones and cones in the game (2023)
     # returns a tuple containing (cones, cones)
