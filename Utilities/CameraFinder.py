@@ -36,25 +36,28 @@ for id in os.listdir("/dev/v4l/by-id"):
         cs.set(cv.CAP_PROP_FPS, 15)
         cams.append((cs, id))
 
-while True:
-    for cs, name in cams:
-        frame = np.zeros(shape=(640, 480, 3), dtype=np.uint8)
+if len(cams) > 0:
+    while True:
+        for cs, name in cams:
+            frame = np.zeros(shape=(640, 480, 3), dtype=np.uint8)
 
-        try:
+            try:
 
-            good, new_frame = cs.read()
+                good, new_frame = cs.read()
 
-            if not good:
-                break
-            frame = new_frame
+                if not good:
+                    break
+                frame = new_frame
 
-        except Exception as read_error:
+            except Exception as read_error:
 
-            # Write error to log
-            print("Error reading video:\n    type: {}\n    args: {}\n    {}".format(type(read_error), read_error.args, read_error))
+                # Write error to log
+                print("Error reading video:\n    type: {}\n    args: {}\n    {}".format(type(read_error), read_error.args, read_error))
+            
+            cv.imshow(name, frame)
         
-        cv.imshow(name, frame)
-    
-    if cv.waitKey(1) == 27:
-        cv.destroyAllWindows()
-        exit(0)
+        if cv.waitKey(1) == 27:
+            cv.destroyAllWindows()
+            exit(0)
+else:
+    print("No cameras found :'(")

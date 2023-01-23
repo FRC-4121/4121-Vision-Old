@@ -88,7 +88,7 @@ networkTablesConnected = False
 
 piname = hostname()
 currentTime = time.localtime(time.time())
-timeString = str(currentTime.tm_year) + str(currentTime.tm_mon) + str(currentTime.tm_mday) + str(currentTime.tm_hour) + str(currentTime.tm_min)
+timeString = "{}-{}-{}_{}:{}:{}".format(currentTime.tm_year, currentTime.tm_mon, currentTime.tm_mday, currentTime.tm_hour, currentTime.tm_min, currentTime.tm_sec)
 
 # change settings based on hostname
 if piname == 'raspberrypi3':
@@ -281,7 +281,6 @@ def main():
     #Define variables
     gyroAngle = 0
     currentTime = []
-    timeString = ''
 
     #Define objects
     navx = None
