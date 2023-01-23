@@ -48,7 +48,6 @@ sys.path.append('/usr/local/lib/vmxpi/')
 #sys.path.append('C:\\Users\\timfu\\Documents\\Team4121\\Libraries')
 
 #Module imports
-import cv2 as cv
 import numpy as np
 import datetime
 import time
@@ -86,6 +85,8 @@ navxTesting = 0 # 0 to disable
 visionTesting = 0 # 0 to disable
 networkTablesConnected = False
 startupSleep = 0
+canUseOpenCV = False
+cv = None
 
 piname = hostname()
 currentTime = time.localtime(time.time())
@@ -112,6 +113,9 @@ elif piname == 'raspberrypi4':
     navxTesting = 0
     visionTesting = 0
     startupSleep = 0 # TODO: make 60 for game
+    canUseOpenCV = True
+    import cv2
+    cv = cv2
 else:
     logFilename = '/home/pi/Team4121/Logs/Run_Log_' + timeString + '.txt'
     with open(logFilename, 'w') as log_file:
@@ -278,7 +282,7 @@ def main():
     global useNavx, timeString, networkTablesConnected, visionTable, done
 
     time.sleep(startupSleep)
-    
+
     navxLoopCount = 0
     visionLoopCount = 0
 
@@ -410,7 +414,7 @@ def main():
             #################################
 
             #Check for stop code from keyboard (for testing)
-            if cv.waitKey(1) == 27:
+            if canUseOpenCV and cv.waitKey(1) == 27:
                 break
 
             #Check for stop code from network tables
@@ -423,7 +427,7 @@ def main():
             print(finish - start)
 
         #Close all open windows (for testing)
-        if videoTesting == True:
+        if videoTesting:
             cv.destroyAllWindows()
 
         #Close the log file
