@@ -23,6 +23,7 @@ import importlib as imp
 
 # Setup paths
 sys.path.append('/usr/local/lib/vmxpi/')
+sys.path.append('/home/pi/.local/lib/python3.5/site-packages')
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 
 # Module imports
@@ -31,6 +32,7 @@ import time
 import datetime
 import logging
 from threading import Thread
+import vmxpi_hal_python as vmxpi
 
 
 # Define the Navx class
@@ -39,15 +41,12 @@ class FRCNavx:
     # Define initialization
     def __init__(self, name):
 
-        # Load VMX module
-        vmxpi = imp.load_source('vmxpi_hal_python', '/usr/local/lib/vmxpi/vmxpi_hal_python.py')
         self.vmx = vmxpi.VMXPi(False, 50)
 
         if self.vmx.IsOpen(): # board is powered, connected, and in a valid state
             # Reset Navx and initialize time
             self.vmx.getAHRS().Reset()
             self.vmx.getAHRS().ZeroYaw()
-            self.vmx.getAHRS().ZeroPitch()
             self.time = self.vmx.getTime().GetRTCTime()
             self.date = self.vmx.getTime().GetRTCDate()
             self.poisoned = False
@@ -78,6 +77,7 @@ class FRCNavx:
         self.angle = 0.0
         self.yaw = 0.0
         self.pitch = 0.0
+        self.roll = 0.0
         self.time = []
         self.date = []
        
@@ -102,6 +102,12 @@ class FRCNavx:
         self.pitch = round(self.vmx.getAHRS().GetPitch(), 2)
         return self.pitch
 
+    # Define read pitch method
+    def read_roll(self):
+
+        self.roll = round(self.vmx.getAHRS().GetRoll(), 2)
+        return self.roll
+
 
     # Define reset gyro method
     def reset_gyro(self):
@@ -109,6 +115,23 @@ class FRCNavx:
         self.vmx.Reset()
         self.vmx.ZeroYaw()
 
+    def read_orientation(self):
+        return (self.read_yaw(), self.read_pitch(), self.read_roll())
+
+    # What could this possibly do?
+    def read_acceleration(self):
+        ahrs = self.vmx.getAHRS()
+        return (ahrs.GetWorldLinearAccelX(), ahrs.GetWorldLinearAccelY(), ahrs.GetWorldLinearAccelZ())
+
+    # What could this possibly do?
+    def read_velocity(self):
+        ahrs = self.vmx.getAHRS()
+        return (ahrs.GetVelocityX(), ahrs.GetVelocityY(), ahrs.GetVelocityZ())
+    
+    def read_position(self):
+        ahrs = self.vmx.getAHRS()
+        return (ahrs.GetDisplacementX(), ahrs.GetDisplacementY(), ahrs.GetDisplacementZ())
+    
 
     # Define read time method
     def read_time(self):
