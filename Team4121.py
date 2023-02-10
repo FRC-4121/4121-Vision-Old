@@ -60,9 +60,7 @@ from platform import node as hostname
 from timeit import timeit
 
 #Team 4121 module imports
-from FRCCameraLibrary import FRCWebCam
 from FRCNavxLibrary import FRCNavx
-from FRCVision2023 import *
 
 #Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -87,6 +85,11 @@ networkTablesConnected = False
 startupSleep = 0
 canUseOpenCV = False
 cv = None
+FRCWebCam = None
+CubeVisionLibrary = None
+ConeVisionLibrary = None
+TapeRectVisionLibrary = None
+VisionBase = None
 
 piname = hostname()
 currentTime = time.localtime(time.time())
@@ -99,7 +102,7 @@ if piname == 'raspberrypi3':
     videoTesting = False
     resizeVideo = False
     saveVideo = False
-    findTape = True
+    findTape = False
     navxTesting = 0
     visionTesting = 0
 elif piname == 'raspberrypi4':
@@ -116,6 +119,13 @@ elif piname == 'raspberrypi4':
     canUseOpenCV = True
     import cv2
     cv = cv2
+    import FRCCameraLibrary
+    FRCWebCam = FRCCameraLibrary.FRCWebCam
+    import FRCVision2023
+    CubeVisionLibrary = FRCVision2023.CubeVisionLibrary
+    ConeVisionLibrary = FRCVision2023.ConeVisionLibrary
+    TapeRectVisionLibrary = FRCVision2023.TapeRectVisionLibrary
+    VisionBase = FRCVision2023.VisionBase
 else:
     logFilename = '/home/pi/Team4121/Logs/Run_Log_' + timeString + '.txt'
     with open(logFilename, 'w') as log_file:
@@ -294,11 +304,13 @@ def main():
     navx = None
     visionTable = None
     navxTable = None
-    FRCWebCam.read_config_file(cameraFile)
-    fieldCam = FRCWebCam('FIELD', timeString)
-    tapeCam = FRCWebCam('TAPE', timeString)
-
-    VisionBase.read_vision_file(visionFile)
+    fieldCam = None    
+    tapeCam = None
+    if canUseOpenCV:
+        FRCWebCam.read_config_file(cameraFile)
+        fieldCam = FRCWebCam('FIELD', timeString)
+        tapeCam = FRCWebCam('TAPE', timeString)
+        VisionBase.read_vision_file(visionFile)
     cubeLib = None
     coneLib = None
     tapeLib = None
@@ -354,7 +366,7 @@ def main():
             #Get VMX gyro angle
             if useNavx:
 
-                gyroInit = navxTable.getNumber("ZeroGyro", 0)  #Check for signal to re-zero gyro
+                gyroInit = navxTable.getNumber("ZeroGyro", 0) if networkTablesConnected else 0  #Check for signal to re-zero gyro
                 if gyroInit == 1:
                     navx.reset_gyro()
                     navxTable.putNumber("ZeroGyro", 0)      
