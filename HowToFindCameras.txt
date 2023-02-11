@@ -1,0 +1,14 @@
+sudo apt-get install v4l-utils
+
+v4l2-ctl --list-devices
+	search for lines containing "/dev/"
+
+v4l2-ctl -d /dev/videoX -D
+
+	where 'X' is a device listed above
+	search for "Video Capture" to distinguish from "metadata device"
+	search for "Serial           :" to find the specific camera
+	
+v4l2-ctl -d /dev/videoX --list-formats-ext
+	will list both "raw" and "mpeg" formats and sample rates
+	
