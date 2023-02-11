@@ -42,7 +42,7 @@ class FRCWebCam:
     # Define initialization
     def __init__(self, name, timestamp, videofile = None):
         self.name = name
-        self.device_id = self.get_config("ID", "")
+        self.device_id = int(self.get_config("ID", "0"))
         
         #Open a log file
         logFilename = "/home/pi/Team4121/Logs/Webcam_Log_{}_{}.txt".format(self.name, timestamp)
@@ -61,7 +61,9 @@ class FRCWebCam:
         self.height = int(self.get_config("HEIGHT", 240))
         self.width = int(self.get_config("WIDTH", 320))
         self.fov = float(self.get_config("FOV", 0.0))
+
         # Set up web camera
+        #self.camStream = cv.VideoCapture(self.device_id)
         self.camStream = cv.VideoCapture(self.device_id)
         self.camStream.set(cv.CAP_PROP_FRAME_WIDTH, self.width)
         self.camStream.set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
@@ -70,29 +72,30 @@ class FRCWebCam:
         self.camStream.set(cv.CAP_PROP_FPS, int(self.get_config("FPS", 15)))
 
         # Set up video writer
-        self.videoFilename = "/home/pi/Team4121/Videos/" + videofile + ".avi"
-        self.fourcc = cv.VideoWriter_fourcc("M","J","P","G")
-        self.camWriter = cv.VideoWriter()
+        # self.videoFilename = "/home/pi/Team4121/Videos/" + videofile + ".avi"
+        # self.fourcc = cv.VideoWriter_fourcc("M","J","P","G")
+        # self.camWriter = cv.VideoWriter()
 
-        try:
-            self.camWriter.open(self.videoFilename, self.fourcc, 
-                                float(self.get_config("FPS", 15)), 
-                                (self.width, self.height),
-                                True)
-        except:
-            self.log_file.write("Error opening video writer for file: {}\n".format(self.videoFilename))
+        # try:
+        #     self.camWriter.open(self.videoFilename, self.fourcc, 
+        #                         float(self.get_config("FPS", 15)), 
+        #                         (self.width, self.height),
+        #                         True)
+        # except:
+        #     self.log_file.write("Error opening video writer for file: {}\n".format(self.videoFilename))
         
-        if self.camWriter.isOpened():
-            self.log_file.write("Video writer is open\n")
-        else:
-            self.log_file.write("Video writer is NOT open\n")
+        # if self.camWriter.isOpened():
+        #     self.log_file.write("Video writer is open\n")
+        # else:
+        #     self.log_file.write("Video writer is NOT open\n")
 
         # Make sure video capture is opened
         if self.camStream.isOpened() == False:
+            print("Camera stream is not open")
             self.camStream.open(self.device_id)
 
         # Initialize blank frames
-        #self.frame = np.zeros(shape=(self.width, self.height, 3), dtype=np.uint8)
+        self.frame = np.zeros(shape=(self.width, self.height, 3), dtype=np.uint8)
 
         # Grab an initial frame
         self.grabbed, self.frame = self.camStream.read()
@@ -136,6 +139,9 @@ class FRCWebCam:
                 # Remove trailing newlines and whitespace
                 clean_line = line.strip()
                 if len(clean_line) == 0:
+                    continue
+
+                if clean_line[0] == '#':
                     continue
                 # Split the line into parts
                 split_line = clean_line.split('=')
@@ -211,8 +217,11 @@ class FRCWebCam:
 
             # Grab new frame
             self.grabbed, self.frame = self.camStream.read()
+
             if not self.grabbed:
+                print("New frame not acquired")
                 return newFrame
+
             # Undistort image
             if self.undistort_img == True:
                 h, w = self.frame.shape[:2]

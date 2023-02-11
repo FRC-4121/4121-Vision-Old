@@ -1,3 +1,4 @@
 from FRCVisionBase import VisionBase
 from CubeVisionLibrary import CubeVisionLibrary
 from ConeVisionLibrary import ConeVisionLibrary
+from TapeRectLibs import *

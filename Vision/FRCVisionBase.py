@@ -188,4 +188,4 @@ class VisionBase:
     def find_with_camera(self, cam):
         frame = np.zeros((cam.width, cam.height, 3), np.uint8)
         frame = cam.read_frame()
-        return frame#, self.find_objects(frame, cam.width, cam.height, cam.fov)
+        return frame, self.find_objects(frame, cam.width, cam.height, cam.fov)
