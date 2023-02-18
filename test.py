@@ -1,10 +1,12 @@
 import sys
+import time
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/home/pi/Team4121/Libraries')
 sys.path.append('/usr/local/lib/vmxpi/')
-from FRCNavxLibrary import FRCNavx
-from time import sleep
-gyro = FRCNavx("Navx")
-while True:
-    print("yaw: {}. pitch: {}".format(gyro.read_yaw(), gyro.read_pitch()))
-    sleep(0.1)
+
+from vmxpi_hal_python import VMXPi
+
+vmx = VMXPi(False, 50)
+print(vmx.isOpen())
+time.sleep(15)
+print(vmx.isOpen())

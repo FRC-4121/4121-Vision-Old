@@ -42,7 +42,8 @@ class FRCWebCam:
     # Define initialization
     def __init__(self, name, timestamp, videofile = None):
         self.name = name
-        self.device_id = int(self.get_config("ID", "0"))
+        self.device_id = self.get_config("ID", "0")
+        self.device_id = int(self.device_id) if self.device_id.isnumeric() else self.device_id
         
         #Open a log file
         logFilename = "/home/pi/Team4121/Logs/Webcam_Log_{}_{}.txt".format(self.name, timestamp)
@@ -61,6 +62,7 @@ class FRCWebCam:
         self.height = int(self.get_config("HEIGHT", 240))
         self.width = int(self.get_config("WIDTH", 320))
         self.fov = float(self.get_config("FOV", 0.0))
+        self.fps = int(self.get_config("FPS", 15))
 
         # Set up web camera
         #self.camStream = cv.VideoCapture(self.device_id)
@@ -69,25 +71,25 @@ class FRCWebCam:
         self.camStream.set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
         self.camStream.set(cv.CAP_PROP_BRIGHTNESS, float(self.get_config("BRIGHTNESS", 0)))
         self.camStream.set(cv.CAP_PROP_EXPOSURE, int(self.get_config("EXPOSURE", 0)))
-        self.camStream.set(cv.CAP_PROP_FPS, int(self.get_config("FPS", 15)))
+        self.camStream.set(cv.CAP_PROP_FPS, self.fps)
 
         # Set up video writer
-        # self.videoFilename = "/home/pi/Team4121/Videos/" + videofile + ".avi"
-        # self.fourcc = cv.VideoWriter_fourcc("M","J","P","G")
-        # self.camWriter = cv.VideoWriter()
+        self.videoFilename = "/home/pi/Team4121/Videos/" + videofile + ".avi"
+        fourcc = cv.VideoWriter_fourcc(*"MJPG")
+        self.camWriter = cv.VideoWriter(self.videoFilename, fourcc, self.fps, (self.width, self.height))
 
-        # try:
-        #     self.camWriter.open(self.videoFilename, self.fourcc, 
-        #                         float(self.get_config("FPS", 15)), 
-        #                         (self.width, self.height),
-        #                         True)
-        # except:
-        #     self.log_file.write("Error opening video writer for file: {}\n".format(self.videoFilename))
+        try:
+            self.camWriter.open(self.videoFilename, self.fourcc, 
+                                float(self.get_config("FPS", 15)), 
+                                (self.width, self.height),
+                                True)
+        except:
+            self.log_file.write("Error opening video writer for file: {}\n".format(self.videoFilename))
         
-        # if self.camWriter.isOpened():
-        #     self.log_file.write("Video writer is open\n")
-        # else:
-        #     self.log_file.write("Video writer is NOT open\n")
+        if self.camWriter.isOpened():
+            self.log_file.write("Video writer is open\n")
+        else:
+            self.log_file.write("Video writer is NOT open\n")
 
         # Make sure video capture is opened
         if self.camStream.isOpened() == False:

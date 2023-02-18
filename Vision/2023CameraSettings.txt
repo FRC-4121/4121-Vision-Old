@@ -6,7 +6,6 @@ RESIZE_FACTOR=2
 EXPOSURE=50
 MOUNT_ANGLE=0
 MOUNT_HEIGHT=0
-#ID=/dev/v4l/platform-fd500000.pcie-pci-0000:01:00.0-usb-0:1.2:1.0-video-index1
 ID=0
 
 FIELD:
