@@ -12,9 +12,9 @@ sys.path.append('/usr/local/lib/vmxpi/')
 import datetime
 import time
 import logging
-from networktables import NetworkTables
 from platform import node as hostname
 import cv2 as cv
+import ntcore
 
 #Team 4121 module imports
 from FRCCameraLibrary import FRCWebCam
@@ -41,6 +41,8 @@ startupSleep = 0
 
 currentTime = time.localtime(time.time())
 timeString = "{}-{}-{}_{}:{}:{}".format(currentTime.tm_year, currentTime.tm_mon, currentTime.tm_mday, currentTime.tm_hour, currentTime.tm_min, currentTime.tm_sec)
+
+nt = ntcore.NetworkTableInstance.getDefault()
 
 def unwrap_or(val, default):
     if val is None:
@@ -224,9 +226,10 @@ def main():
         #Connect NetworkTables
         try:
             if networkTablesConnected:
-                NetworkTables.initialize(server='10.41.21.2')
-                visionTable = NetworkTables.getTable("vision")
-                navxTable = NetworkTables.getTable("navx")
+                nt.startClient3("pi4")
+                nt.setServer("10.41.21.2")
+                visionTable = nt.getTable("vision")
+                navxTable = nt.getTable("navx")
                 networkTablesConnected = True
                 log_file.write('Connected to Networktables on 10.41.21.2 \n')
 

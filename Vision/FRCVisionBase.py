@@ -16,7 +16,7 @@
 
 # Module Imports
 import cv2 as cv
-import numpy as np 
+import numpy as np
 import math
 from threading import Thread
 
@@ -169,8 +169,8 @@ class VisionBase:
         
         # Find contours in mask
         contours, _ = cv.findContours(finalImg, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    
-        return contours
+        
+        return list(contours)
 
 
     # Define basic image processing method for edge detection
