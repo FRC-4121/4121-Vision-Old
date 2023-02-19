@@ -35,6 +35,14 @@ logging.basicConfig(level=logging.DEBUG)
 # Set global variables
 calibration_dir = "/home/pi/Team4121/Config"
 
+def find_cams(port: int):
+    file = f"/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb1/1-1/1-1.{port}/1-1.{port}:1.0/video4linux"
+    if os.path.exists(file):
+        files = [int(x[5:]) for x in os.listdir(file) if x[:5] == "video" and x[5:].isnumeric()]
+        files.sort()
+        if len(files) > 0:
+            return files[0]
+
 
 # Define the web camera class
 class FRCWebCam:
@@ -43,9 +51,15 @@ class FRCWebCam:
     # Define initialization
     def __init__(self, name, timestamp, videofile = None, csname = None):
         self.name = name
-        self.device_id = self.get_config("ID", "0")
-        self.device_id = int(self.device_id) if self.device_id.isnumeric() else self.device_id
-        
+        port = self.get_config("PORT", None)
+        if port is not None:
+            port = find_cams(port)
+        if port is None:
+            self.device_id = self.get_config("ID", "0")
+            self.device_id = int(self.device_id) if self.device_id.isnumeric() else self.device_id
+        else:
+            self.device_id = port    
+
         #Open a log file
         logFilename = "/home/pi/Team4121/Logs/Webcam_Log_{}_{}.txt".format(self.name, timestamp)
         if videofile is None:
@@ -124,7 +138,7 @@ class FRCWebCam:
             self.cvs = None
 
         # Log init complete message
-        self.log_file.write("Webcam initialization complete\m")
+        self.log_file.write("Webcam initialization complete\n")
 
     @staticmethod
     def read_config_file(file, reload = False):

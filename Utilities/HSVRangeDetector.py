@@ -8,7 +8,7 @@
 # (python) range-detector --filter HSV --webcam
 
 import cv2
-import argparse
+import sys
 from operator import xor
 
 
@@ -41,7 +41,7 @@ def main():
 
     range_filter = "HSV"
 
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(int(sys.argv[1]) if len(sys.argv) > 1 else 0)
     camera.set(10, 100)
     camera.set(15, 0)
     #camera.setResolution(160, 120)
