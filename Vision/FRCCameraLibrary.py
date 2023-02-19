@@ -27,6 +27,7 @@ import logging
 import cv2 as cv
 import numpy as np
 from threading import Thread
+from cscore import CvSource, VideoMode
 
 #Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -40,7 +41,7 @@ class FRCWebCam:
     config = {"": {}}
     init = False
     # Define initialization
-    def __init__(self, name, timestamp, videofile = None):
+    def __init__(self, name, timestamp, videofile = None, csname = None):
         self.name = name
         self.device_id = self.get_config("ID", "0")
         self.device_id = int(self.device_id) if self.device_id.isnumeric() else self.device_id
@@ -63,6 +64,7 @@ class FRCWebCam:
         self.width = int(self.get_config("WIDTH", 320))
         self.fov = float(self.get_config("FOV", 0.0))
         self.fps = int(self.get_config("FPS", 15))
+        self.streamRes = int(self.get_config("STREAM_RES", 1))
 
         # Set up web camera
         #self.camStream = cv.VideoCapture(self.device_id)
@@ -116,6 +118,11 @@ class FRCWebCam:
             self.distort_coeffs = np.loadtxt(cam_coeffs_file)
             self.undistort_img = True
         
+        if csname is not None:
+            self.cvs = CvSource(csname, VideoMode.PixelFormat.kBGR, self.width // self.streamRes, self.height // self.streamRes, self.fps)
+        else:
+            self.cvs = None
+
         # Log init complete message
         self.log_file.write("Webcam initialization complete\m")
 
@@ -218,19 +225,18 @@ class FRCWebCam:
         try:
 
             # Grab new frame
-            self.grabbed, self.frame = self.camStream.read()
+            self.grabbed, frame = self.camStream.read()
 
             if not self.grabbed:
-                print("New frame not acquired")
                 return newFrame
 
             # Undistort image
             if self.undistort_img == True:
-                h, w = self.frame.shape[:2]
+                h, w = frame.shape[:2]
                 new_matrix, roi = cv.getOptimalNewCameraMatrix(self.cam_matrix,
                                                                 self.distort_coeffs,
                                                                 (w,h),1,(w,h))
-                newFrame = cv.undistort(self.frame, self.cam_matrix,
+                newFrame = cv.undistort(frame, self.cam_matrix,
                                         self.distort_coeffs, None,
                                         new_matrix)
                 x,y,w,h = roi
@@ -238,45 +244,15 @@ class FRCWebCam:
 
             else:
 
-                newFrame = self.frame
+                newFrame = frame
 
         except Exception as read_error:
 
             # Write error to log
             self.log_file.write("Error reading video:\n    type: {}\n    args: {}\n    {}\n".format(type(read_error), read_error.args, read_error))
 
-        # Return the most recent frame
-        return newFrame
-
-
-    # Define threaded frame read method
-    def read_frame_threaded(self):
-
-        # Declare frame for undistorted image
-        newFrame = np.zeros(shape=(self.width, self.height, 3), dtype=np.uint8)
-
-        try:
-
-            # Undistort image
-            if self.undistort_img == True:
-                h, w = self.frame.shape[:2]
-                new_matrix, roi = cv.getOptimalNewCameraMatrix(self.cam_matrix,
-                                                                self.distort_coeffs,
-                                                                (w,h),1,(w,h))
-                newFrame = cv.undistort(self.frame, self.cam_matrix,
-                                        self.distort_coeffs, None,
-                                        new_matrix)
-                x,y,w,h = roi
-                newFrame = newFrame[y:y+h,x:x+w]
-
-            else:
-
-                newFrame = self.frame
-
-        except Exception as read_error:
-
-            # Write error to log
-            self.log_file.write("Error reading video (threaded):\n    type: {}\n    args: {}\n    {}\n".format(type(read_error), read_error.args, read_error))
+        if self.cvs is not None:
+            self.cvs.putFrame(cv.resize(newFrame, (self.width // self.streamRes, self.height // self.streamRes)))
 
         # Return the most recent frame
         return newFrame

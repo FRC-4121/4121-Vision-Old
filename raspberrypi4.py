@@ -15,6 +15,7 @@ import logging
 from platform import node as hostname
 import cv2 as cv
 import ntcore
+from cscore import CameraServer
 
 #Team 4121 module imports
 from FRCCameraLibrary import FRCWebCam
@@ -30,11 +31,9 @@ videoDirectory = '/home/pi/Team4121/Videos'
 cameraValues = {}
 
 #Define program control flags
-videoTesting = False
+videoTesting = True
 resizeVideo = False
 saveVideo = False
-findField = True
-findTape = True
 visionTesting = 0 # 0 to disable
 networkTablesConnected = False
 startupSleep = 0
@@ -186,6 +185,7 @@ def handle_tapes(frame, tapes):
                         visionTable.putNumber("Tapes.3.offset", unwrap_or(tapes[3].offset, -9999.))
 
     done += 1
+
 #Define main processing function
 def main():
 
@@ -193,28 +193,21 @@ def main():
 
     time.sleep(startupSleep)
 
-    visionLoopCount = 0
-
-    #Define variables
-    gyroAngle = 0
-    currentTime = []
 
     #Define objects
     visionTable = None
     FRCWebCam.read_config_file(cameraFile)
-    fieldCam = FRCWebCam('FIELD', timeString)
-    tapeCam = FRCWebCam('TAPE', timeString)
+    fieldCam = FRCWebCam('FIELD', timeString, csname="field")
+    tapeCam = FRCWebCam('TAPE', timeString, csname="tapes")
     VisionBase.read_vision_file(visionFile)
 
-    cubeLib = None
-    coneLib = None
-    tapeLib = None
-    if findField:
-        cubeLib = CubeVisionLibrary()
-        coneLib = ConeVisionLibrary()
+    CameraServer.addServer("RobotVision")
+    CameraServer.addCamera(fieldCam.cvs)
+    CameraServer.addCamera(tapeCam.cvs)
 
-    if findTape:
-        tapeLib = TapeRectVisionLibrary()
+    cubeLib = CubeVisionLibrary()
+    coneLib = ConeVisionLibrary()
+    tapeLib = TapeRectVisionLibrary()
     
     
     #Open a log file
@@ -245,38 +238,23 @@ def main():
         stop = False
         #Start main processing loop
         while not stop:
-
+            
             ###################
             # Process Web Cam #
             ###################
             done = 0
 
-            if findField:
-                fieldCam.use_libs_async(cubeLib, coneLib, callback=handle_field_objects, name="field")
-
-            if findTape:
-                tapeCam.use_libs_async(tapeLib, callback=handle_tapes, name="tapes")
-
-            visionLoopCount += 1
-            if visionLoopCount + 1 == visionTesting:
-                #print("found {} cubes".format(len(cubes)))
-                visionLoopCount = 0
+            fieldCam.use_libs_async(cubeLib, coneLib, callback=handle_field_objects, name="field")
+            tapeCam.use_libs_async(tapeLib, callback=handle_tapes, name="tapes")
+            
+            while done < 2:
+                time.sleep(0.005)
+            
+            if videoTesting:
                 
-            if findField:
-                if findTape:
-                    while done < 2:
-                        time.sleep(0.005)
-                    cv.imshow("Field", fieldFrame)
-                    cv.imshow("Tapes", tapeFrame)
-                else:
-                    while done < 1:
-                        time.sleep(0.005)
-                    cv.imshow("Field", fieldFrame)
-            else:
-                if findTape:
-                    while done < 1:
-                        time.sleep(0.005)
-                    cv.imshow("Tapes", tapeFrame)
+                cv.imshow("Field", fieldFrame)
+                cv.imshow("Tapes", tapeFrame)
+
             #################################
             # Check for stopping conditions #
             #################################
