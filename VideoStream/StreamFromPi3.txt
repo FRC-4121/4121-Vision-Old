@@ -6,3 +6,6 @@ ffplay udp://127.0.0.1:8121
 
 vlc | "Media | Open Network Stream | udp://@:8121"
 
+on the Pi3:
+
+ffmpeg -s 640x480 -i /dev/video0 -codec:v h264_v4l2m2m -f mpegts udp://viewingAddr:viewingPort
