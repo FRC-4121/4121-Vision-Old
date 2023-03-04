@@ -1,0 +1,8 @@
+python VideoFrameTest.py
+
+g++ -o VideoFrameTest VideoFrameTest.cpp -I/usr/include/opencv4 -lopencv_core -lopencv_highgui -lopencv_videoio
+
+ffplay udp://127.0.0.1:8121
+
+vlc | "Media | Open Network Stream | udp://@:8121"
+
